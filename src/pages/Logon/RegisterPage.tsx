@@ -1,14 +1,16 @@
-import { Button, Container, TextField, Typography, CircularProgress } from '@mui/material';
-import { useLoginViewModel } from '../viewModels/loginViewModel';
+import { Container, TextField, Button, Typography, CircularProgress } from '@mui/material'
+import { useRegisterViewModel } from '../../viewModels/registerViewModel'
 
-export default function LoginPage() {
-  const { form, handleChange, handleSubmit } = useLoginViewModel();
+export default function RegisterPage() {
+  const { form, handleChange, handleSubmit } = useRegisterViewModel()
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Typography variant="h4" gutterBottom>
-        Login
+    <Container maxWidth="xs" sx={{ mt: 8 }}>
+      <Typography variant="h4" component="h1" align="center" gutterBottom>
+        Criar Conta
       </Typography>
+
+      {/* Formulário de Cadastro */}
       <form onSubmit={handleSubmit}>
         <TextField
           fullWidth
@@ -29,6 +31,7 @@ export default function LoginPage() {
           margin="normal"
           required
         />
+
         <Button
           type="submit"
           fullWidth
@@ -37,9 +40,9 @@ export default function LoginPage() {
           sx={{ mt: 2 }}
           disabled={form.loading}
         >
-          {form.loading ? <CircularProgress size={24} /> : 'Entrar'}
+          {form.loading ? <CircularProgress size={24} /> : 'Criar Conta'}
         </Button>
       </form>
     </Container>
-  );
+  )
 }

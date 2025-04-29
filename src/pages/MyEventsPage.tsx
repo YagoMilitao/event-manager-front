@@ -3,6 +3,7 @@ import axios from 'axios'
 import { Container, Grid, Card, CardContent, Typography, CardMedia, CircularProgress } from '@mui/material'
 import { toast } from 'react-toastify'
 import { useAppSelector } from '../store/hooks'
+import LoginLogoutButtons from '../components/LoginLogoutButtons'
 
 interface Event {
   _id: string
@@ -12,6 +13,8 @@ interface Event {
   horaInicio: string
   local: string
   image?: string
+  horaFim?: string
+  preco?: string
 }
 
 export default function MyEventsPage() {
@@ -28,7 +31,7 @@ export default function MyEventsPage() {
           return
         }
 
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/events/my-event`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/events/my-event`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -87,11 +90,24 @@ export default function MyEventsPage() {
                   <Typography variant="body2" color="text.secondary">
                     📍 {event.local}
                   </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    📍 {event.data}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    📍 {event.descricao}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    📍 {event.horaInicio}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    📍 {event._id}
+                  </Typography>
                 </CardContent>
               </Card>
           ))}
         </Grid>
       )}
+      <LoginLogoutButtons />
     </Container>
   )
 }

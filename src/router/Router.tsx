@@ -5,6 +5,7 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import MyEventsPage from '../pages/MyEventsPage';
 import { JSX } from 'react/jsx-runtime';
+import RegisterPage from '../pages/Logon/RegisterPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -17,8 +18,10 @@ export default function RouterApp() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
         <Route
-          path="/my-events"
+          path="/my-event"
           element={
             <PrivateRoute>
               <MyEventsPage />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { loginUser } from '../viewmodels/authViewModel';
+import { loginUser } from '../viewModels/authViewModel';
 import { useNavigate } from 'react-router-dom';
 import { Container, Box, Typography, TextField, Button, CircularProgress } from '@mui/material';
 import { toast } from 'react-toastify';
@@ -33,7 +33,7 @@ export default function LoginPage() {
       login(token, user);
 
       toast.success('Login realizado com sucesso!');
-      navigate('/my-events'); // Redireciona para a página dos eventos do usuário
+      navigate('/my-event'); // Redireciona para a página dos eventos do usuário
     } catch (error) {
       console.error('❌ Erro ao fazer login:', error);
       toast.error('Falha no login. Verifique suas credenciais!');
