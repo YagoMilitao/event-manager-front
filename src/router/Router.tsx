@@ -3,10 +3,12 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
-import MyEventsPage from '../pages/MyEventsPage';
+import MyEventsPage from '../pages/events/MyEventsPage';
 import { JSX } from 'react/jsx-runtime';
 import RegisterPage from '../pages/Logon/RegisterPage';
-import CreateEventPage from '../pages/MyEventsPage';
+import CreateEventPage from '../pages/events/MyEventsPage';
+import EventsPage from '../pages/events/EventsPage';
+import EventDetailsPage from '../pages/events/EventDetailsPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);

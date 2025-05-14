@@ -2,7 +2,7 @@ import axios from 'axios';
 import { store } from '../store';
 
 const api = axios.create({
-  baseURL: 'https://seu-backend-no-render.com', // coloca seu endpoint aqui
+  baseURL: import.meta.env.VITE_API_URL, // coloca seu endpoint aqui
 });
 
 api.interceptors.request.use((config) => {

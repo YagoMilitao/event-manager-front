@@ -10,7 +10,7 @@ import {
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector } from '../store/hooks';
+import { useAppSelector } from '../../store/hooks';
 
 const initialOrganizer = {
    nome: '', 
@@ -19,23 +19,21 @@ const initialOrganizer = {
    instagram: 'https://www.instagram.com/' 
 };
 
-
-
 export default function CreateEventPage() {
-    const token = useAppSelector((state) => state.auth.token);
-    const navigate = useNavigate();
-    const [form, setForm] = useState({
-        titulo: '',
-        descricao: '',
-        data: '',
-        horaInicio: '',
-        horaFim: '',
-        local: '',
-        preco: 0,
-        traje: '',
-        organizadores: [initialOrganizer], // ✅ Array de organizadores
-        image: null as File | null,
-    });
+    const token = useAppSelector((state) => state.auth.token);
+    const navigate = useNavigate();
+    const [form, setForm] = useState({
+        titulo: '',
+        descricao: '',
+        data: '',
+        horaInicio: '',
+        horaFim: '',
+        local: '',
+        preco: 0,
+        traje: '',
+        organizadores: [initialOrganizer], // ✅ Array de organizadores
+        image: null as File | null,
+    });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, files } = e.target;
@@ -63,9 +61,6 @@ export default function CreateEventPage() {
         };
         setForm({ ...form, organizadores: updatedOrganizers });
     };
-
-
-
     const handleAddOrganizer = () => {
         setForm({ ...form, organizadores: [...form.organizadores, initialOrganizer] });
     };
@@ -95,10 +90,10 @@ export default function CreateEventPage() {
               : `${import.meta.env.VITE_API_URL}/api/events/create-event`,
               formData,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data',
-                    },
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                  },
                 }
             );
             toast.success('Evento criado com sucesso!');
