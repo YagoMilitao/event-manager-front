@@ -1,8 +1,13 @@
 import { Button, Container, TextField, Typography, CircularProgress } from '@mui/material';
 import { useLoginViewModel } from '../viewModels/loginViewModel';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const { form, handleChange, handleSubmit } = useLoginViewModel();
+  const navigate = useNavigate(); // Para redirecionar
+  const handleMain = () => {
+    navigate('/');
+  };
 
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
@@ -40,6 +45,13 @@ export default function LoginPage() {
           {form.loading ? <CircularProgress size={24} /> : 'Entrar'}
         </Button>
       </form>
+      <Button 
+        variant="outlined" 
+        onClick={handleMain} 
+        sx={{ mt: 2 }}
+      >
+        Home
+      </Button>
     </Container>
   );
 }
