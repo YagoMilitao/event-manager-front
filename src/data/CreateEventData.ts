@@ -1,4 +1,4 @@
-export interface CreateEventForm {
+export type CreateEventForm ={
     titulo: string
     descricao: string
     data: string

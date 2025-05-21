@@ -31,6 +31,16 @@ export default function RegisterPage() {
           margin="normal"
           required
         />
+        <TextField
+          fullWidth
+          label="Confirme a Senha"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          margin="normal"
+          required
+        />
 
         <Button
           type="submit"

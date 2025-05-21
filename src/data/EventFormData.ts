@@ -1,4 +1,4 @@
-export interface EventFormState {
+export type EventFormData = {
     titulo: string;
     descricao: string;
     data: string;

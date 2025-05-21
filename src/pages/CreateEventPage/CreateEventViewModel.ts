@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CreateEventForm } from './CreateEventState'
+import { CreateEventForm } from '../../data/CreateEventData'
 import api from '../../api/api'
 import { toast } from 'react-toastify'
 

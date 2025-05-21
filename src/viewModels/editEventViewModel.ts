@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { EventFormState } from '../state/EventFormState';
+import { EventFormState } from '../data/EventFormData';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { toast } from 'react-toastify';

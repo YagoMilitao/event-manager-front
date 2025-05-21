@@ -2,12 +2,12 @@ import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setToken } from '../store/authSlice';
-import { LoginState } from '../state/LoginState';
+import { LoginData } from '../data/LoginData';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 export function useLoginViewModel() {
-  const [form, setForm] = useState<LoginState>({ email: '', password: '', loading: false });
+  const [form, setForm] = useState<LoginData>({ email: '', password: '', loading: false });
   // Formulário começa vazio
 
   const dispatch = useDispatch();

@@ -6,8 +6,11 @@ export default function LoginPage() {
   const { form, handleChange, handleSubmit } = useLoginViewModel();
   const navigate = useNavigate(); // Para redirecionar
   const handleMain = () => {
-    navigate('/');
-  };
+    navigate('/')
+  }
+  const handleRegister = () => {
+    navigate('/register')
+  }
 
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
@@ -45,6 +48,9 @@ export default function LoginPage() {
           {form.loading ? <CircularProgress size={24} /> : 'Entrar'}
         </Button>
       </form>
+      <Button variant="outlined" 
+        onClick={handleRegister} 
+        sx={{ mt: 2 }}> Register</Button>
       <Button 
         variant="outlined" 
         onClick={handleMain} 

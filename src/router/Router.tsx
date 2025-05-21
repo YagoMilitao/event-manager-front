@@ -39,7 +39,7 @@ export default function RouterApp() {
         />
         <Route
           path="/my-event"
-          element={
+          element={ 
             <PrivateRoute>
               <MyEventsPage />
             </PrivateRoute>
