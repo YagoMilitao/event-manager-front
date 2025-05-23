@@ -180,7 +180,6 @@ export default function CreateEventPage() {
                 <Button variant="outlined" onClick={handleMain} sx={{ mt: 2 }}>
                     Home
                 </Button>
-                
             </Box>
         </Container>
     );

@@ -15,7 +15,7 @@ export default function EventDetailsPage() {
  useEffect(() => {
   const fetchEvent = async () => {
    try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/events/${id}`)
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/events/:${id}`)
     setEvent(response.data)
    } catch (error) {
     toast.error('Erro ao buscar detalhes do evento')

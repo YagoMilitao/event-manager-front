@@ -5,8 +5,8 @@ import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import MyEventsPage from '../pages/events/MyEventsPage';
 import { JSX } from 'react/jsx-runtime';
-import RegisterPage from '../pages/Logon/RegisterPage';
-import CreateEventPage from '../pages/events/MyEventsPage';
+import RegisterPage from '../pages/logon/RegisterPage';
+import CreateEventPage from '../pages/createEventPage/CreateEventPage';
 import EventsPage from '../pages/events/EventsPage';
 import EventDetailsPage from '../pages/events/EventDetailsPage';
 
@@ -58,7 +58,9 @@ export default function RouterApp() {
           element={
             <PrivateRoute> 
               <CreateEventPage /> 
-            </PrivateRoute>}/>
+            </PrivateRoute>
+          }
+        />
 
         <Route
           path="/api/events/:id"
