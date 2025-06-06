@@ -33,7 +33,7 @@ export default function LoginPage() {
       login(token, user);
 
       toast.success('Login realizado com sucesso!');
-      navigate('/my-event'); // Redireciona para a página dos eventos do usuário
+      navigate('/event-dashboard'); // Redireciona para a página dos eventos do usuário
     } catch (error) {
       console.error('❌ Erro ao fazer login:', error);
       toast.error('Falha no login. Verifique suas credenciais!');
@@ -48,7 +48,6 @@ export default function LoginPage() {
         <Typography variant="h4" gutterBottom>
           Login
         </Typography>
-
         <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
           <TextField
             fullWidth
@@ -59,7 +58,6 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-
           <TextField
             fullWidth
             margin="normal"
@@ -69,7 +67,6 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-
           <Button
             type="submit"
             fullWidth

@@ -3,12 +3,14 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
-import MyEventsPage from '../pages/events/MyEventsPage';
 import { JSX } from 'react/jsx-runtime';
-import RegisterPage from '../pages/logon/RegisterPage';
-import CreateEventPage from '../pages/createEventPage/CreateEventPage';
-import EventsPage from '../pages/events/EventsPage';
+import EventsPage from '../pages/events/MyEventsPage';
 import EventDetailsPage from '../pages/events/EventDetailsPage';
+import UserEventDashboard from '../pages/events/UserEventDashboard';
+import RegisterPage from '../pages/Logon/RegisterPage';
+import CreateEventPage from '../pages/createEventPage/CreateEventPage';
+import MyEventsPage from '../pages/events/MyEventsPage';
+import MyEventsPageView from '../pages/events/MyEventsPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -38,18 +40,20 @@ export default function RouterApp() {
           } 
         />
         <Route
-          path="/my-event"
+          path="/event-dashboard"
           element={ 
             <PrivateRoute>
-              <MyEventsPage />
+              <UserEventDashboard />
             </PrivateRoute>
           }
         />
         <Route
-          path="api/events"
+          path="my-events"
           element={
           <PrivateRoute>
-            <EventsPage />
+            <MyEventsPage events={[]} loading={false} error={null} onLogout={function (): void {
+                throw new Error('Function not implemented.');
+              } }/>
           </PrivateRoute>
           }
         />

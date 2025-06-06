@@ -85,7 +85,7 @@ export function useEditEventViewModel() {
       });
 
       toast.success('Evento atualizado com sucesso!');
-      navigate('/my-event');
+      navigate('/event-dashboard');
     } catch (error) {
       console.error('Erro ao editar evento:', error);
       toast.error('Erro ao editar evento.');

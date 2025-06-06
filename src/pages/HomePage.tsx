@@ -56,7 +56,7 @@ export default function HomePage() {
   </Typography>
   {/* Botão de Meus Eventos só se estiver logado */}
   {token && (
-    <Link href="/events/my-event" style={{ textDecoration: 'none' }}>
+    <Link href="/event-dashboard" style={{ textDecoration: 'none' }}>
      <button style={{ marginBottom: '1rem' }}>📁 Meus Eventos</button>
     </Link>
    )}

@@ -31,7 +31,7 @@ export function useLoginViewModel() {
       // Salva o token retornado no Redux
 
       toast.success('Login realizado com sucesso!');
-      navigate('/my-event'); 
+      navigate('/event-dashboard'); 
       // Redireciona para a página de eventos (privada)
     } catch (error) {
       console.error('Erro ao logar:', error);

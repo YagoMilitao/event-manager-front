@@ -54,7 +54,7 @@ export function useCreateEventViewModel() {
       });
 
       toast.success('Evento criado com sucesso!');
-      navigate('/my-event');
+      navigate('/event-dashboard');
     } catch (error) {
       console.error('Erro ao criar evento:', error);
       toast.error('Erro ao criar evento.');
