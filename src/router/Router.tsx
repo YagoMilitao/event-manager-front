@@ -4,13 +4,12 @@ import { RootState } from '../store';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import { JSX } from 'react/jsx-runtime';
-import EventsPage from '../pages/events/MyEventsPage';
+import EventsPage from '../pages/events/MyEventsPageScreen';
 import EventDetailsPage from '../pages/events/EventDetailsPage';
 import UserEventDashboard from '../pages/events/UserEventDashboard';
 import RegisterPage from '../pages/Logon/RegisterPage';
 import CreateEventPage from '../pages/createEventPage/CreateEventPage';
 import MyEventsPage from '../pages/events/MyEventsPage';
-import MyEventsPageView from '../pages/events/MyEventsPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -51,9 +50,7 @@ export default function RouterApp() {
           path="my-events"
           element={
           <PrivateRoute>
-            <MyEventsPage events={[]} loading={false} error={null} onLogout={function (): void {
-                throw new Error('Function not implemented.');
-              } }/>
+            <MyEventsPage />
           </PrivateRoute>
           }
         />
