@@ -5,7 +5,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '../firebase'
 
 export function useRegisterViewModel() {
-  const [form, setForm] = useState({ email: '', password: '', loading: false })
+  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '', loading: false })
   const navigate = useNavigate()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,9 +20,10 @@ export function useRegisterViewModel() {
       await createUserWithEmailAndPassword(auth, form.email, form.password)
       toast.success('Conta criada com sucesso!')
       navigate('/login')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Erro ao criar conta:', error)
-      toast.error('Erro ao criar conta. Verifique o email.')
+      toast.error('Erro ao criar conta. Verifique suas credenciais.')
     } finally {
       setForm((prev) => ({ ...prev, loading: false }))
     }

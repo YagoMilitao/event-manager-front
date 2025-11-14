@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { EventFormState } from '../data/EventFormData';
+import { EventFormData } from '../data/EventFormData';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { RootState } from '../store/store';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 export function useCreateEventViewModel() {
-  const [form, setForm] = useState<EventFormState>({
+  const [form, setForm] = useState<EventFormData>({
     titulo: '',
     descricao: '',
     data: '',

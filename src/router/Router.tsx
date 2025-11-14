@@ -1,15 +1,14 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { RootState } from '../store/store';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
 import { JSX } from 'react/jsx-runtime';
-import EventsPage from '../pages/events/MyEventsPageScreen';
 import EventDetailsPage from '../pages/events/EventDetailsPage';
 import UserEventDashboard from '../pages/events/UserEventDashboard';
 import RegisterPage from '../pages/Logon/RegisterPage';
-import CreateEventPage from '../pages/createEventPage/CreateEventPage';
 import MyEventsPage from '../pages/events/MyEventsPage';
+import CreateEventPage from '../pages/CreateEventPage/CreateEventPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);

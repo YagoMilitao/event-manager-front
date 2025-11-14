@@ -1,23 +1,18 @@
-// src/pages/events/useMyEventsViewModel.ts
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-// Não precisamos mais de `auth` e `useAuthState` aqui se o Redux gerencia o token
-// import { auth } from '../../firebase';
-// import { useAuthState } from 'react-firebase-hooks/auth';
-import { useSelector } from 'react-redux'; // Importar useSelector do Redux
+import { useSelector } from 'react-redux';
 import { auth } from '../firebase';
 import api from '../api/api';
 import { EventData } from '../data/EventData';
-import { RootState } from '../store';
+import { RootState } from '../store/store';
 
 interface MyEventsViewModel {
   events: EventData[];
   loading: boolean;
   error: string | null;
   handleLogout: () => void;
-  // O token não é exposto diretamente na ViewModel, mas é usado internamente
 }
+
 
 export const useMyEventsViewModel = (): MyEventsViewModel => {
   const [events, setEvents] = useState<EventData[]>([]);
@@ -25,8 +20,6 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-
-  // <<-- AQUI ESTÁ A MUDANÇA: Obtemos o token do Redux
   const token = useSelector((state: RootState) => state.auth.token); 
   // O Redux não tem `authLoading` ou `authError` diretamente para o token,
   // você assume que se o token existe, o usuário está "autenticado" para fins de UI.
@@ -97,8 +90,8 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
 
   return {
     events,
-    loading: loading, // Não combinamos com authLoading
-    error: error,     // Não combinamos com authError
+    loading: loading,
+    error: error,
     handleLogout,
   };
 };

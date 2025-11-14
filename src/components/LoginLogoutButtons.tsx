@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux'; 
 // Hook para acessar e mudar o estado global (Redux)
 
-import { RootState } from '../store';
+import { RootState } from '../store/store';
 import { clearToken } from '../store/authSlice';
 import { useNavigate } from 'react-router-dom'; 
 // Hook para mudar de página no React Router

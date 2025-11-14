@@ -1,7 +1,7 @@
 import { Container, TextField, Button, Typography } from '@mui/material'
 import { useCreateEventViewModel } from './CreateEventViewModel'
 
-export default function CreateEventPage() {
+export default function CreateEventPageScreen() {
   const { form, handleChange, handleImageChange, handleSubmit } = useCreateEventViewModel()
 
   return (

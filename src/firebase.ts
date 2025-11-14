@@ -14,16 +14,3 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
-// src/firebase.ts - APENAS PARA TESTE!
-
-// const firebaseConfig = {
-//   apiKey: "AIzaSyBPSBrxQJv-2Hkcra9-t6rteF6Za78wET0", // Valor direto
-//   authDomain: "gerenciamento-eventos.firebaseapp.com", // Valor direto
-//   projectId: "gerenciamento-eventos", // Valor direto
-//   storageBucket: "gerenciamento-eventos.firebasestorage.app",
-//   messagingSenderId: "442197069319",
-//   appId: "1:442197069319:web:6aeef4bcb9415cd408a4a2"
-// };
-
-// const app = initializeApp(firebaseConfig);
-// export const auth = getAuth(app);

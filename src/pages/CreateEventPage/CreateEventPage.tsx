@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import {
     Container,
@@ -97,6 +98,7 @@ export default function CreateEventPage() {
                 form.image ? (() => {
                     const formData = new FormData();
                     Object.entries(form).forEach(([key, value]) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         formData.append(key, value as any); // Use 'any' para evitar erro de tipo com File
                     });
                     formData.append('organizadores', JSON.stringify(form.organizadores));
@@ -106,15 +108,55 @@ export default function CreateEventPage() {
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        'Content-Type': form.image ? 'multipart/form-data' : 'application/json', // ✅ Define o Content-Type como application/json se não houver imagem
+                        ...(form.image ? {} : { 'Content-Type': 'application/json' }), // deixe o navegador definir multipart boundary quando houver imagem
+                        //'Content-Type': form.image ? 'multipart/form-data' : 'application/json', // ✅ Define o Content-Type como application/json se não houver imagem
                     },
                 }
             );
             toast.success('Evento criado com sucesso!');
             navigate('/eventos');
-        } catch (error) {
-            console.error('Erro ao criar evento:', error);
-            toast.error('Erro ao criar evento');
+        } catch (err: unknown) {
+            console.error('Erro ao criar evento:', err);
+             if (axios.isAxiosError(err)) {
+                    const axiosErr = err;
+                    const status = axiosErr.response?.status;
+                    const url = axiosErr.config?.url;
+                    const responseData = axiosErr.response?.data;
+
+                    console.error('Detalhes do AxiosError:', {
+                        message: axiosErr.message,
+                        status,
+                        url,
+                        responseData,
+                        request: axiosErr.request,
+                    });
+
+                    // extrai mensagem amigável para o usuário
+                    let userMessage = 'Erro ao criar evento';
+                    if (responseData) {
+                        if (typeof responseData === 'string') {
+                            userMessage = responseData;
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        } else if ((responseData as any).message) {
+                            userMessage = (responseData as any).message;
+                        } else {
+                            try {
+                                userMessage = JSON.stringify(responseData);
+                            } catch {
+                                userMessage = axiosErr.message;
+                            }
+                        }
+                    } else {
+                        userMessage = axiosErr.message || userMessage;
+                    }
+                    toast.error(userMessage);
+            } else if (err instanceof Error) {
+                    // outros erros JS
+                    console.error('Erro não-Axios:', err);
+                    toast.error(err.message);
+                } else {
+                    toast.error('Erro ao criar evento');
+                }
         }
     };
 

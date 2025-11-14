@@ -1,6 +1,4 @@
-// src/pages/events/MyEventsPage.tsx
-// Este é o componente "Container" ou "Smart Component"
-// Sua única responsabilidade é conectar o ViewModel à View.
+
 
 import React from 'react';
 import MyEventsPageScreen from './MyEventsPageScreen'; // A View (o componente visual)

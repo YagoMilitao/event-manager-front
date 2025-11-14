@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'; // Importa as funcionalidades de estado e efeitos do React
-import axios from 'axios'; // Importa a biblioteca axios para fazer requisições HTTP
+import  { useEffect, useState } from 'react'; 
+import axios from 'axios'; 
 import { Container, Typography,  CircularProgress, Link, List, ListItem, ListItemText } from '@mui/material'; // Importa componentes visuais do Material UI
-import { toast } from 'react-toastify'; // Importa a biblioteca para exibir notificações (toasts)
-import LoginLogoutButtons from '../components/LoginLogoutButtons'; // Importa um componente customizado para botões de login/logout
+import { toast } from 'react-toastify'; 
+import LoginLogoutButtons from '../components/LoginLogoutButtons'; 
 import { EventData } from '../data/EventData';
 import { useAppSelector } from '../store/hooks'
 

@@ -7,18 +7,17 @@ import {
   CardContent,
   CardActions,
   Button,
-  CircularProgress,
   Alert,
   AppBar,
   Toolbar,
   Box,
   Skeleton,
 } from '@mui/material';
-import { Grid } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import { EventData } from '../../data/EventData'; 
 
 interface MyEventsPageScreenProps {
-  events: EventData[]; // <<-- Agora usando EventData
+  events: EventData[];
   loading: boolean;
   error: string | null;
   onLogout: () => void;
@@ -28,9 +27,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({ events, loading
   if (loading) {
     return (
       <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-        {/* <CircularProgress /> */}
         <Skeleton animation="wave" />
-        {/* <Typography variant="h6" sx={{ ml: 2 }}>Carregando seus eventos...</Typography> */}
       </Container>
     );
   }

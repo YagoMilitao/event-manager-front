@@ -1,18 +1,19 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { setCredentials, logout } from '../store/authSlice';
+import { RootState } from '../store/store';
+import { setToken, clearToken } from '../store/authSlice';
+import { PayloadAction } from '@reduxjs/toolkit';
 
 export const useAuth = () => {
   const dispatch = useDispatch();
-  const { token, user } = useSelector((state: RootState) => state.auth);
+  const { token } = useSelector((state: RootState) => state.auth);
 
-  const login = (token: string, user: any) => {
-    dispatch(setCredentials({ token, user }));
+  const login = (action: PayloadAction<string>) => {
+    dispatch(setToken(action.payload));
   };
 
   const signout = () => {
-    dispatch(logout());
+    dispatch(clearToken());
   };
 
-  return { token, user, login, signout };
+  return { token, login, signout };
 };
