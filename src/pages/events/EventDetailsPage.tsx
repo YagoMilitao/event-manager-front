@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
-import { Container, Typography, CircularProgress, Card, CardMedia, CardContent } from '@mui/material'
+import { Container, Typography, Card, CardMedia, CardContent } from '@mui/material'
 import { toast } from 'react-toastify'
 import { EventData } from '../../data/EventData'
-import { getValue } from '@mui/system'
+import EventDetailsSkeleton from '../../components/skeletons/EventDetailsSkeleton'
 
 export default function EventDetailsPage() {
  const { id } = useParams()
@@ -30,9 +30,9 @@ export default function EventDetailsPage() {
 
  if (loading) {
   return (
-   <Container sx={{ mt: 10, textAlign: 'center' }}>
-    <CircularProgress />
-   </Container>
+    <Container sx={{ mt: 4 }}>
+      <EventDetailsSkeleton />
+    </Container>
   )
  }
 

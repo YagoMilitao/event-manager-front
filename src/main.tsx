@@ -6,6 +6,7 @@ import { store } from './store/store.ts';
 import App from './App.tsx'
 import './firebase'
 
+
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>

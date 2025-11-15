@@ -16,16 +16,16 @@ export default function UserEventDashboard() {
     <Container sx={{ mt: 4 }}>
 
       <Typography variant="h4" gutterBottom>
-        My Eventssssssssssss
+        Evento
       </Typography>
       <Box sx={{ mb: 2 }}>
         <Button variant="contained" color="primary" onClick={handleMyEvents}>
-          My Events
+          Meus eventos criados
         </Button>
       </Box>
       <Box sx={{ mb: 2 }}>
         <Button variant="contained" color="primary" onClick={handleCreateEvent}>
-          Create Event
+          Criar Evento
         </Button>
       </Box>
       <Button

@@ -1,10 +1,11 @@
 import  { useEffect, useState } from 'react'; 
 import axios from 'axios'; 
-import { Container, Typography,  CircularProgress, Link, List, ListItem, ListItemText } from '@mui/material'; // Importa componentes visuais do Material UI
+import { Container, Typography, Link, List, ListItem, ListItemText } from '@mui/material'; // Importa componentes visuais do Material UI
 import { toast } from 'react-toastify'; 
 import LoginLogoutButtons from '../components/LoginLogoutButtons'; 
 import { EventData } from '../data/EventData';
 import { useAppSelector } from '../store/hooks'
+import EventListSkeleton from '../components/skeletons/EventListSkeleton';
 
 // Componente funcional HomePage
 export default function HomePage() {
@@ -34,61 +35,74 @@ export default function HomePage() {
     setLoading(false); // Define 'loading' como false, indicando que a busca terminou
    }
   };
-
   // Chama a função para buscar os eventos quando o componente é montado (ou quando suas dependências mudam, neste caso, nenhuma dependência)
   fetchEvents();
  }, []); // O array vazio de dependências significa que este efeito roda apenas uma vez após a primeira renderização
 
  // Se 'loading' for true, renderiza um indicador de carregamento
  if (loading) {
-  return (
-   <Container sx={{ mt: 10, textAlign: 'center' }}>
-    <CircularProgress /> {/* Componente do Material UI que mostra uma animação de carregamento */}
-   </Container>
-  );
+
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Eventos
+        </Typography>
+
+        {/* Botão de Meus Eventos só se estiver logado */}
+        {token && (
+          <Link href="/event-dashboard" style={{ textDecoration: 'none' }}>
+            <button style={{ marginBottom: '1rem' }}>📁 Meus Eventos</button>
+          </Link>
+        )}
+         <EventListSkeleton rows={6} showActions={true} />
+
+        {/* Skeleton da lista de eventos */}
+        <LoginLogoutButtons />
+      </Container>
+    );
  }
  const today = new Date()
  // Se 'loading' for false, renderiza a lista de eventos
  return (
   <Container sx={{ mt: 4 }}>
-  <Typography variant="h4" gutterBottom>
-   Eventos
-  </Typography>
-  {/* Botão de Meus Eventos só se estiver logado */}
-  {token && (
-    <Link href="/event-dashboard" style={{ textDecoration: 'none' }}>
-     <button style={{ marginBottom: '1rem' }}>📁 Meus Eventos</button>
-    </Link>
-   )}
-  {/* Lista de eventos futuros */}
-  <List>
-   {events.map((event) => {
-    const eventDate = new Date(event.data)
-    const isPast = eventDate < today
+    <Typography variant="h4" gutterBottom>
+      Eventos
+    </Typography>
+    {/* Botão de Meus Eventos só se estiver logado */}
+    {token && (
+      <Link href="/event-dashboard" style={{ textDecoration: 'none' }}>
+       <button style={{ marginBottom: '1rem' }}>📁 Meus Eventos</button>
+      </Link>
+     )}
+    {/* Lista de eventos futuros */}
+    <List>
+     {events.map((event) => {
+      const eventDate = new Date(event.data)
+      const isPast = eventDate < today
 
-    return (
-     <ListItem
-      key={event._id}
-      sx={{
-       backgroundColor: isPast ? '#f0f0f0' : '#fff',
-       color: isPast ? '#999' : 'inherit',
-       borderBottom: '1px solid #ccc',
-      }}
-     >
-      <ListItemText
-       primary={event.titulo}
-       secondary={`${eventDate} - ${event.local}`}
-      />
-      {!isPast && (
-       <Link href={`/api/events/${event._id}`} underline="hover">
-        Ver detalhes
-       </Link>
-      )}
-     </ListItem>
-    )
-   })}
-  </List>
-  <LoginLogoutButtons />
- </Container>
+      return (
+       <ListItem
+        key={event._id}
+        sx={{
+         backgroundColor: isPast ? '#f0f0f0' : '#fff',
+         color: isPast ? '#999' : 'inherit',
+         borderBottom: '1px solid #ccc',
+        }}
+       >
+        <ListItemText
+         primary={event.titulo}
+         secondary={`${eventDate} - ${event.local}`}
+        />
+        {!isPast && (
+         <Link href={`/api/events/${event._id}`} underline="hover">
+          Ver detalhes
+         </Link>
+        )}
+       </ListItem>
+      )
+     })}
+    </List>
+    <LoginLogoutButtons />
+  </Container>
  );
 }
