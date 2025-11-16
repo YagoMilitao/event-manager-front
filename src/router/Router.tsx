@@ -8,7 +8,7 @@ import EventDetailsPage from '../pages/events/EventDetailsPage';
 import UserEventDashboard from '../pages/events/UserEventDashboard';
 import RegisterPage from '../pages/Logon/RegisterPage';
 import MyEventsPage from '../pages/events/MyEventsPage';
-import CreateEventPage from '../pages/CreateEventPage/CreateEventPage';
+import CreateEventPageScreen from '../pages/CreateEventPage/CreateEventPageSceen';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -46,7 +46,7 @@ export default function RouterApp() {
           }
         />
         <Route
-          path="my-events"
+          path="/my-events"
           element={
           <PrivateRoute>
             <MyEventsPage />
@@ -57,7 +57,7 @@ export default function RouterApp() {
           path="/create-event" 
           element={
             <PrivateRoute> 
-              <CreateEventPage /> 
+              <CreateEventPageScreen /> 
             </PrivateRoute>
           }
         />

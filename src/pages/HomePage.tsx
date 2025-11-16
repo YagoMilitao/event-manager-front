@@ -7,6 +7,7 @@ import LoginLogoutButtons from '../components/LoginLogoutButtons';
 import { EventData } from '../data/EventData';
 import { useAppSelector } from '../store/hooks'
 import EventListSkeleton from '../components/skeletons/EventListSkeleton';
+import { formatDatePt, formatHour } from '../utils/dateTimeFormat';
 
 // Componente funcional HomePage
 export default function HomePage() {
@@ -80,6 +81,26 @@ export default function HomePage() {
      {events.map((event) => {
       const eventDate = new Date(event.data)
       const isPast = eventDate < today
+      const dateLabel = formatDatePt(event.data);
+      const horaInicioLabel = formatHour(event.horaInicio);
+      const horaFimLabel = formatHour(event.horaFim);
+        
+      // "19:30 - 22:00" ou só "19:30"
+      let timeRangeLabel = '';
+      if (horaInicioLabel && horaFimLabel) {
+        timeRangeLabel = `${horaInicioLabel} - ${horaFimLabel}`;
+      } else if (horaInicioLabel) {
+        timeRangeLabel = horaInicioLabel;
+      }
+    
+      // Ex.: "16/11/2025 às 19:30 - 22:00 • São Paulo"
+      const secondaryText = [
+        dateLabel || null,
+        timeRangeLabel ? `às ${timeRangeLabel}` : null,
+        event.local || null,
+      ]
+        .filter(Boolean)
+        .join(' • ');
 
       return (
        <ListItem
@@ -92,7 +113,7 @@ export default function HomePage() {
        >
         <ListItemText
          primary={event.titulo}
-         secondary={`${eventDate} - ${event.local}`}
+         secondary={secondaryText}
         />
         {!isPast && (
          <Link to={`/api/events/${event._id}`} style={{ textDecoration: 'none' }}>
