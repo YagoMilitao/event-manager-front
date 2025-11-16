@@ -1,6 +1,7 @@
-import  { useEffect, useState } from 'react'; 
+import  { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios'; 
-import { Container, Typography, Link, List, ListItem, ListItemText } from '@mui/material'; // Importa componentes visuais do Material UI
+import { Container, Typography, List, ListItem, ListItemText } from '@mui/material'; // Importa componentes visuais do Material UI
 import { toast } from 'react-toastify'; 
 import LoginLogoutButtons from '../components/LoginLogoutButtons'; 
 import { EventData } from '../data/EventData';
@@ -50,7 +51,7 @@ export default function HomePage() {
 
         {/* Botão de Meus Eventos só se estiver logado */}
         {token && (
-          <Link href="/event-dashboard" style={{ textDecoration: 'none' }}>
+          <Link to="/event-dashboard" style={{ textDecoration: 'none' }}>
             <button style={{ marginBottom: '1rem' }}>📁 Meus Eventos</button>
           </Link>
         )}
@@ -70,7 +71,7 @@ export default function HomePage() {
     </Typography>
     {/* Botão de Meus Eventos só se estiver logado */}
     {token && (
-      <Link href="/event-dashboard" style={{ textDecoration: 'none' }}>
+      <Link to="/event-dashboard" style={{ textDecoration: 'none' }}>
        <button style={{ marginBottom: '1rem' }}>📁 Meus Eventos</button>
       </Link>
      )}
@@ -94,7 +95,7 @@ export default function HomePage() {
          secondary={`${eventDate} - ${event.local}`}
         />
         {!isPast && (
-         <Link href={`/api/events/${event._id}`} underline="hover">
+         <Link to={`/api/events/${event._id}`} style={{ textDecoration: 'none' }}>
           Ver detalhes
          </Link>
         )}
