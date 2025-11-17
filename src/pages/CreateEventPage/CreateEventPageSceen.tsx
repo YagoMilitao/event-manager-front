@@ -1,27 +1,19 @@
+import { useEffect, useState } from 'react';
 import {
   Container,
   TextField,
   Button,
   Typography,
-  Box,
   Paper,
+  Grid,
   Stack,
-  Divider,
-  IconButton,
-  Avatar,
-  Chip,
+  Box,
 } from '@mui/material';
-import { useEffect, useState, useMemo } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useCreateEventViewModel } from './CreateEventViewModel';
 import EventFormSkeleton from '../../components/skeletons/EventFormSkeleton';
-
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function CreateEventPageScreen() {
   const {
@@ -35,14 +27,16 @@ export default function CreateEventPageScreen() {
   } = useCreateEventViewModel();
 
   const [loading, setLoading] = useState(true);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-  // Skeleton: simula carregamento inicial
+  // Carrega algo da API só pra mostrar skeleton
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        await axios.get('https://event-manager-back.onrender.com/api/events');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/events`,
+        );
+        console.log('Eventos (só pra teste Skeleton):', response.data);
       } catch (error) {
         console.error('❌ Erro ao buscar eventos:', error);
         toast.error('Erro ao carregar eventos');
@@ -54,40 +48,33 @@ export default function CreateEventPageScreen() {
     fetchEvents();
   }, []);
 
-  // Preview da imagem escolhida
+  // 🔍 Gera/prepara URLs de preview quando as imagens mudam
   useEffect(() => {
-    if (!form.image) {
-      setImagePreview(null);
+    // limpa URLs antigas
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
+
+    if (!form.images || form.images.length === 0) {
+      setPreviewUrls([]);
       return;
     }
 
-    const url = URL.createObjectURL(form.image);
-    setImagePreview(url);
+    const urls = form.images.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
 
+    // cleanup quando o componente desmontar
     return () => {
-      URL.revokeObjectURL(url);
+      urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [form.image]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.images]);
 
-  // Habilitar/desabilitar botão "Salvar" com base em campos obrigatórios
-  const isSaveDisabled = useMemo(() => {
-    const hasTitle = form.titulo.trim().length > 0;
-    const hasDate = !!form.data;
-    const hasLocal = form.local.trim().length > 0;
-    const hasStartTime = !!form.horaInicio;
-
-    const hasAtLeastOneOrganizerWithName = form.organizadores.some(
-      (o) => o.nome.trim().length > 0
-    );
-
-    return !(
-      hasTitle &&
-      hasDate &&
-      hasLocal &&
-      hasStartTime &&
-      hasAtLeastOneOrganizerWithName
-    );
-  }, [form]);
+  const handleSaveClick = async () => {
+    const success = await handleSubmit();
+    if (success) {
+      // se quiser, aqui você pode navegar ou limpar campos extras
+      // navigate('/my-events');
+    }
+  };
 
   if (loading) {
     return (
@@ -97,314 +84,269 @@ export default function CreateEventPageScreen() {
     );
   }
 
-  const handleSaveClick = async () => {
-    const ok = await handleSubmit();
-    if (ok) {
-      navigate('/my-events'); // rota que você já usa após criar
-    }
-  };
-
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
         Criar Evento
       </Typography>
 
-      <Typography variant="body2" color="text.secondary">
-        Preencha as informações abaixo para cadastrar um novo evento. Campos com
-        <Typography component="span" color="error" sx={{ ml: 0.5 }}>
-          *
-        </Typography>{' '}
-        são obrigatórios.
-      </Typography>
-
-      <Paper
-        elevation={3}
-        sx={{
-          mt: 3,
-          p: { xs: 2, md: 3 },
-          borderRadius: 2,
-        }}
-      >
-        {/* Seção: Informações do evento */}
-        <Typography variant="h6" gutterBottom>
-          Informações do evento
-        </Typography>
-
-        <Stack spacing={2}>
-          <TextField
-            label="Título do evento *"
-            name="titulo"
-            value={form.titulo}
-            onChange={handleChange}
-            fullWidth
-            required
-            helperText="Um nome curto e claro para o evento."
-          />
-
-          <TextField
-            label="Descrição"
-            name="descricao"
-            value={form.descricao}
-            onChange={handleChange}
-            multiline
-            rows={4}
-            fullWidth
-            helperText="Fale um pouco sobre o evento (opcional)."
-          />
-
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
-          >
+      <Paper sx={{ p: 3 }}>
+        <Grid container spacing={2}>
+          {/* Coluna esquerda */}
+          <Grid item xs={12} md={8}>
             <TextField
-              label="Data *"
-              type="date"
-              name="data"
-              value={form.data}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
               fullWidth
+              label="Título"
+              name="titulo"
+              value={form.titulo}
+              onChange={handleChange}
+              margin="normal"
               required
             />
 
             <TextField
-              label="Hora de início *"
-              name="horaInicio"
-              type="time"
-              value={form.horaInicio}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{ step: 300 }} // 5 em 5 minutos
               fullWidth
+              label="Descrição"
+              name="descricao"
+              value={form.descricao}
+              onChange={handleChange}
+              margin="normal"
+              multiline
+              rows={4}
+            />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Data"
+                  name="data"
+                  type="date"
+                  value={form.data}
+                  onChange={handleChange}
+                  margin="normal"
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Hora de Início"
+                  name="horaInicio"
+                  type="time"
+                  value={form.horaInicio}
+                  onChange={handleChange}
+                  margin="normal"
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  fullWidth
+                  label="Hora de Fim"
+                  name="horaFim"
+                  type="time"
+                  value={form.horaFim}
+                  onChange={handleChange}
+                  margin="normal"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            </Grid>
+
+            <TextField
+              fullWidth
+              label="Local"
+              name="local"
+              value={form.local}
+              onChange={handleChange}
+              margin="normal"
               required
             />
 
-            <TextField
-              label="Hora de fim"
-              name="horaFim"
-              type="time"
-              value={form.horaFim}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{ step: 300 }}
-              fullWidth
-            />
-          </Stack>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Preço (opcional)"
+                  name="preco"
+                  value={form.preco}
+                  onChange={handleChange}
+                  margin="normal"
+                  placeholder="Ex: 33,00"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Traje (opcional)"
+                  name="traje"
+                  value={form.traje}
+                  onChange={handleChange}
+                  margin="normal"
+                  placeholder="Ex: Esporte fino, Livre..."
+                />
+              </Grid>
+            </Grid>
 
-          <TextField
-            label="Local *"
-            name="local"
-            value={form.local}
-            onChange={handleChange}
-            fullWidth
-            required
-            helperText="Cidade, endereço ou ponto de referência."
-          />
+            {/* IMAGENS */}
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Imagens do evento
+              </Typography>
 
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              label="Preço (opcional)"
-              name="preco"
-              value={form.preco}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Traje (opcional)"
-              name="traje"
-              value={form.traje}
-              onChange={handleChange}
-              fullWidth
-              placeholder="Ex: Esporte fino, Social, Livre..."
-            />
-          </Stack>
-        </Stack>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* Seção: Organizadores */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={1}
-        >
-          <Typography variant="h6">Organizadores</Typography>
-          <Chip
-            label={`${form.organizadores.length} organizador${
-              form.organizadores.length > 1 ? 'es' : ''
-            }`}
-            size="small"
-            color="primary"
-            variant="outlined"
-          />
-        </Stack>
-
-        <Typography variant="body2" color="text.secondary" mb={1}>
-          Pelo menos um organizador com nome é obrigatório.
-        </Typography>
-
-        <Stack spacing={2}>
-          {form.organizadores.map((organizador, index) => (
-            <Paper
-              key={index}
-              variant="outlined"
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                borderColor: 'divider',
-              }}
-            >
               <Stack
-                direction="row"
-                alignItems="center"
+                direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
-                mb={2}
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
               >
-                <Avatar>
-                  {organizador.nome
-                    ? organizador.nome.charAt(0).toUpperCase()
-                    : index + 1}
-                </Avatar>
-                <Typography variant="subtitle1">
-                  Organizador {index + 1}
-                </Typography>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<UploadFileIcon />}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Selecionar imagens
+                  <input
+                    type="file"
+                    hidden
+                    multiple
+                    name="images" // 👈 bate com upload.array("images")
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                </Button>
 
-                {form.organizadores.length > 1 && (
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleRemoveOrganizer(index)}
-                    sx={{ marginLeft: 'auto' }}
-                  >
-                    <DeleteOutlineIcon fontSize="small" />
-                  </IconButton>
+                {form.images && form.images.length > 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    {form.images.length} imagem(ns) selecionada(s)
+                  </Typography>
                 )}
               </Stack>
 
-              <Stack spacing={1.5}>
+              {/* Thumbnails */}
+              {previewUrls.length > 0 && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1.5,
+                  }}
+                >
+                  {previewUrls.map((url, idx) => (
+                    <Box
+                      key={idx}
+                      component="img"
+                      src={url}
+                      alt={`Preview ${idx + 1}`}
+                      sx={{
+                        width: 96,
+                        height: 96,
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                        border: '1px solid #ccc',
+                        boxShadow: 1,
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Grid>
+
+          {/* Coluna direita: organizadores */}
+          <Grid item xs={12} md={4}>
+            <Typography variant="h6" gutterBottom>
+              Organizadores
+            </Typography>
+
+            {form.organizadores.map((organizador, index) => (
+              <Paper
+                key={index}
+                variant="outlined"
+                sx={{ p: 2, mb: 2 }}
+              >
+                <Typography variant="subtitle2" gutterBottom>
+                  Organizador {index + 1}
+                </Typography>
+
                 <TextField
-                  label="Nome *"
+                  fullWidth
+                  label="Nome"
                   value={organizador.nome}
                   onChange={(e) =>
                     handleOrganizerChange(e, index, 'nome')
                   }
+                  margin="dense"
                   required
-                  fullWidth
                 />
                 <TextField
+                  fullWidth
                   label="Email"
                   value={organizador.email}
                   onChange={(e) =>
                     handleOrganizerChange(e, index, 'email')
                   }
-                  fullWidth
+                  margin="dense"
                 />
                 <TextField
+                  fullWidth
                   label="WhatsApp"
                   value={organizador.whatsapp}
                   onChange={(e) =>
                     handleOrganizerChange(e, index, 'whatsapp')
                   }
-                  fullWidth
+                  margin="dense"
                 />
                 <TextField
+                  fullWidth
                   label="Instagram"
                   value={organizador.instagram}
                   onChange={(e) =>
                     handleOrganizerChange(e, index, 'instagram')
                   }
-                  fullWidth
+                  margin="dense"
                 />
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
 
-        <Button
-          startIcon={<AddCircleOutlineIcon />}
-          onClick={handleAddOrganizer}
-          sx={{ mt: 2 }}
-        >
-          Adicionar organizador
-        </Button>
+                {form.organizadores.length > 1 && (
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={() => handleRemoveOrganizer(index)}
+                    sx={{ mt: 1 }}
+                  >
+                    Remover
+                  </Button>
+                )}
+              </Paper>
+            ))}
 
-        <Divider sx={{ my: 3 }} />
-
-        {/* Seção: Imagem do evento */}
-        <Typography variant="h6" gutterBottom>
-          Imagem do evento
-        </Typography>
-
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          alignItems={{ xs: 'flex-start', sm: 'center' }}
-        >
-          <Button
-            variant="outlined"
-            component="label"
-            startIcon={<UploadFileIcon />}
-            sx={{ width: { xs: '100%', sm: 'auto' } }}
-          >
-            Selecionar imagem
-            <input
-              type="file"
-              name="image"
-              hidden
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </Button>
-
-          {form.image && (
-            <Typography variant="body2" color="text.secondary">
-              Arquivo selecionado: <strong>{form.image.name}</strong>
-            </Typography>
-          )}
-        </Stack>
-
-        {imagePreview && (
-          <Box
-            mt={2}
-            sx={{
-              width: '100%',
-              maxWidth: 320,
-              borderRadius: 2,
-              overflow: 'hidden',
-              border: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <img
-              src={imagePreview}
-              alt="Pré-visualização do evento"
-              style={{ width: '100%', display: 'block' }}
-            />
-          </Box>
-        )}
-
-        <Divider sx={{ my: 3 }} />
+            <Button
+              variant="text"
+              onClick={handleAddOrganizer}
+              sx={{ mt: 1 }}
+            >
+              + Adicionar organizador
+            </Button>
+          </Grid>
+        </Grid>
 
         {/* Ações */}
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
           justifyContent="flex-end"
+          sx={{ mt: 3 }}
         >
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/')}
-          >
-            Cancelar
-          </Button>
-
           <Button
             variant="contained"
             color="primary"
             onClick={handleSaveClick}
-            disabled={isSaveDisabled}
           >
             Salvar evento
           </Button>

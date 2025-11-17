@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -12,26 +11,24 @@ const initialOrganizer: Organizer = {
   instagram: 'https://www.instagram.com/',
 };
 
-function parseTimeToNumber(time: string): number | null {
-  if (!time) return null;
+function normalizePrice(raw: string | number | null | undefined): string {
+  if (raw === null || raw === undefined) return '0';
 
-  // Espera algo tipo "19:30"
-  const [hoursStr, minutesStr] = time.split(':');
-  const hours = Number(hoursStr);
-  const minutes = Number(minutesStr);
+  const str = String(raw).trim();
+  if (!str) return '0';
 
-  if (
-    Number.isNaN(hours) ||
-    Number.isNaN(minutes) ||
-    hours < 0 ||
-    hours > 23 ||
-    minutes < 0 ||
-    minutes > 59
-  ) {
-    return null;
+  // tira tudo que não for dígito, vírgula ou ponto
+  let cleaned = str.replace(/[^\d.,]/g, '');
+  // vírgula -> ponto
+  cleaned = cleaned.replace(',', '.');
+
+  const parts = cleaned.split('.');
+  if (parts.length > 2) {
+    cleaned = parts[0] + '.' + parts.slice(1).join('');
   }
+  if (!cleaned || cleaned === '.') return '0';
 
-  return hours * 100 + minutes; // 19:30 -> 1930
+  return cleaned;
 }
 
 export function useCreateEventViewModel() {
@@ -47,70 +44,36 @@ export function useCreateEventViewModel() {
     preco: '',
     traje: '',
     organizadores: [initialOrganizer],
-    image: null,
+    images: [],
   });
 
-  // Normaliza a base URL (remove barras no final)
-  const rawBaseUrl = import.meta.env.VITE_API_URL || '';
-  const baseUrl = rawBaseUrl.replace(/\/+$/, '');
-
-  // 📝 Campos simples (exceto imagem e organizadores)
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const target = e.target as HTMLInputElement;
-    const { name, value, files } = target;
-
-    if (name === 'image' && files) {
-      setForm((prev) => ({
-        ...prev,
-        image: files[0],
-      }));
-    } else {
-      // Agora deixamos a hora como vem do input type="time" (HH:MM)
-      setForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  // 📸 Campo de imagem (para Button component="label")
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      image: file,
+      [name]: value,
     }));
   };
 
-  // 👥 Organizers – alterar um campo de um organizador específico
   const handleOrganizerChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     index: number,
-    field: keyof Organizer
+    field: keyof Organizer,
   ) => {
     const updated = [...form.organizadores];
     updated[index] = {
       ...updated[index],
       [field]: e.target.value,
     };
-
     setForm((prev) => ({
       ...prev,
       organizadores: updated,
     }));
   };
 
-  // 🔹 Só deixa adicionar um novo organizador se o último tiver pelo menos NOME preenchido
   const handleAddOrganizer = () => {
-    const last = form.organizadores[form.organizadores.length - 1];
-
-    if (!last.nome.trim()) {
-      toast.warning('Preencha o nome do organizador atual antes de adicionar outro.');
-      return;
-    }
-
     setForm((prev) => ({
       ...prev,
       organizadores: [...prev.organizadores, { ...initialOrganizer }],
@@ -118,185 +81,147 @@ export function useCreateEventViewModel() {
   };
 
   const handleRemoveOrganizer = (index: number) => {
-    if (form.organizadores.length <= 1) {
-      toast.warning('O evento precisa ter pelo menos um organizador.');
+    if (form.organizadores.length === 1) {
+      toast.error('Pelo menos um organizador é obrigatório');
       return;
     }
-
-    const updated = [...form.organizadores];
-    updated.splice(index, 1);
-
     setForm((prev) => ({
       ...prev,
-      organizadores: updated,
+      organizadores: prev.organizadores.filter((_, i) => i !== index),
     }));
   };
 
-  // 🧹 Helper para limpar organizadores vazios antes de enviar
-  const sanitizeOrganizers = (orgs: Organizer[]): Organizer[] => {
-    return orgs
-      .map((o) => ({
-        ...o,
-        nome: o.nome.trim(),
-        email: o.email.trim(),
-        whatsapp: o.whatsapp.trim(),
-        instagram: o.instagram.trim(),
-      }))
-      .filter((o) => {
-        const hasAnyField =
-          o.nome ||
-          o.email ||
-          o.whatsapp ||
-          (o.instagram && o.instagram !== 'https://www.instagram.com/');
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
 
-        return hasAnyField;
-      });
+    const fileArray = Array.from(files);
+    const limited = fileArray.slice(0, 5); // limita a 5 imagens
+
+    setForm((prev) => ({
+      ...prev,
+      images: limited,
+    }));
   };
 
-  // 🚀 Envio do formulário (sem ou com imagem)
   const handleSubmit = async (): Promise<boolean> => {
     if (!token) {
       toast.error('Você precisa estar logado para criar um evento');
       return false;
     }
 
-    const tituloTrimmed = form.titulo.trim();
-    const localTrimmed = form.local.trim();
-
-    // ✅ Validações básicas no front antes de chamar o backend
-    if (!tituloTrimmed) {
-      toast.error('Preencha o título do evento.');
-      return false;
-    }
-    if (!form.data) {
-      toast.error('Preencha a data do evento.');
-      return false;
-    }
-    if (!localTrimmed) {
-      toast.error('Preencha o local do evento.');
-      return false;
-    }
-    if (!form.horaInicio) {
-      toast.error('Preencha a hora de início.');
-      return false;
-    }
-
-    const horaInicioNumber = parseTimeToNumber(form.horaInicio);
-    if (horaInicioNumber === null) {
-      toast.error('Hora de início inválida.');
-      return false;
-    }
-
-    const horaFimNumber =
-      form.horaFim && form.horaFim.trim() !== ''
-        ? parseTimeToNumber(form.horaFim)
-        : null;
-
-    if (form.horaFim && horaFimNumber === null) {
-      toast.error('Hora de fim inválida.');
-      return false;
-    }
-
-    // 🔥 Limpa organizadores vazios
-    const cleanedOrganizers = sanitizeOrganizers(form.organizadores);
-
-    if (cleanedOrganizers.length === 0) {
-      toast.error('Adicione pelo menos um organizador com nome.');
-      return false;
-    }
-
-    // Monta payload base alinhado com o Joi do backend
-    const eventData = {
-      nome: tituloTrimmed,
-      descricao: form.descricao,
-      data: form.data, // ISO (yyyy-MM-dd)
-      horaInicio: horaInicioNumber,
-      horaFim: horaFimNumber ?? undefined,
-      local: localTrimmed,
-      preco: String(form.preco || '0'),
-      traje: form.traje,
-      organizadores: cleanedOrganizers,
-    };
-
-    console.log('📦 eventData que será enviado:', eventData);
-
     try {
-      // 📸 Fluxo COM imagem → multipart/form-data
-      if (form.image) {
-        const formData = new FormData();
-        formData.append('nome', eventData.nome);
-        formData.append('descricao', eventData.descricao || '');
-        formData.append('data', eventData.data);
-        formData.append('horaInicio', String(eventData.horaInicio));
-        if (eventData.horaFim !== undefined) {
-          formData.append('horaFim', String(eventData.horaFim));
-        }
-        formData.append('local', eventData.local);
-        formData.append('preco', eventData.preco);
-        formData.append('traje', eventData.traje || '');
-        formData.append('organizadores', JSON.stringify(eventData.organizadores));
-        formData.append('image', form.image);
+      const tituloTrimmed = form.titulo.trim();
+      const localTrimmed = form.local.trim();
 
-        console.log('📦 FormData enviado para create-with-images:');
-        formData.forEach((value, key) => {
-          console.log(key, value);
-        });
+      if (!tituloTrimmed || !form.data || !form.horaInicio || !localTrimmed) {
+        toast.error('Preencha todos os campos obrigatórios (título, data, hora de início, local)');
+        return false;
+      }
+
+      // transforma hora "HH:MM" -> número HHMM (1903, por exemplo)
+      const [hInicio, mInicio] = (form.horaInicio || '0:0').split(':').map(Number);
+      const horaInicioNumber = hInicio * 100 + (mInicio || 0);
+
+      let horaFimNumber: number | undefined;
+      if (form.horaFim) {
+        const [hFim, mFim] = form.horaFim.split(':').map(Number);
+        horaFimNumber = hFim * 100 + (mFim || 0);
+      }
+
+      const cleanedOrganizers = form.organizadores.filter(
+        (o) => o.nome.trim().length > 0,
+      );
+
+      if (cleanedOrganizers.length === 0) {
+        toast.error('Adicione pelo menos um organizador com nome');
+        return false;
+      }
+
+      const precoNormalizado = normalizePrice(form.preco);
+
+      // Se NÃO tiver imagem -> chama rota create-event (JSON)
+      if (!form.images || form.images.length === 0) {
+        const eventData = {
+          nome: tituloTrimmed,
+          descricao: form.descricao,
+          data: form.data,
+          horaInicio: horaInicioNumber,
+          horaFim: horaFimNumber,
+          local: localTrimmed,
+          preco: precoNormalizado,
+          traje: form.traje,
+          organizadores: cleanedOrganizers,
+        };
+
+        console.log('📦 eventData que será enviado (sem imagens):', eventData);
 
         await axios.post(
-          `${baseUrl}/api/events/create-with-images`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      } else {
-        // 📄 Fluxo SEM imagem → JSON normal
-        await axios.post(
-          `${baseUrl}/api/events/create-event`,
+          `${import.meta.env.VITE_API_URL}/api/events/create-event`,
           eventData,
           {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
-          }
+          },
         );
+
+        toast.success('Evento criado com sucesso!');
+        return true;
       }
 
-      toast.success('Evento criado com sucesso!');
+      // ✅ Com IMAGENS -> multipart/form-data
+      const formData = new FormData();
+      formData.append('nome', tituloTrimmed);
+      formData.append('descricao', form.descricao || '');
+      formData.append('data', form.data);
+      formData.append('horaInicio', String(horaInicioNumber));
+      if (horaFimNumber !== undefined) {
+        formData.append('horaFim', String(horaFimNumber));
+      }
+      formData.append('local', localTrimmed);
+      formData.append('preco', precoNormalizado);
+      formData.append('traje', form.traje || '');
+      formData.append('organizadores', JSON.stringify(cleanedOrganizers));
 
-      // Reset do formulário (inclusive organizadores)
-      setForm({
-        titulo: '',
-        descricao: '',
-        data: '',
-        horaInicio: '',
-        horaFim: '',
-        local: '',
-        preco: '',
-        traje: '',
-        organizadores: [initialOrganizer],
-        image: null,
+      // várias imagens
+      form.images.forEach((file) => {
+        formData.append('images', file); // 👈 BATE com upload.array("images")
       });
 
+      console.log('📦 FormData enviado para create-with-images:');
+      formData.forEach((value, key) => {
+        console.log(key, value);
+      });
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/events/create-with-images`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // NÃO setar 'Content-Type', o browser/axios define o boundary
+          },
+        },
+      );
+
+      toast.success('Evento com imagens criado com sucesso!');
       return true;
     } catch (err: unknown) {
       console.error('Erro ao criar evento:', err);
 
       if (axios.isAxiosError(err)) {
-        const axiosErr = err;
-        const status = axiosErr.response?.status;
-        const url = axiosErr.config?.url;
-        const responseData = axiosErr.response?.data;
+        const status = err.response?.status;
+        const url = err.config?.url;
+        const responseData = err.response?.data;
 
         console.error('Detalhes do AxiosError:', {
-          message: axiosErr.message,
+          message: err.message,
           status,
           url,
           responseData,
-          request: axiosErr.request,
+          request: err.request,
         });
 
         let userMessage = 'Erro ao criar evento';
@@ -305,21 +230,10 @@ export function useCreateEventViewModel() {
             userMessage = responseData;
           } else if ((responseData as any).message) {
             userMessage = (responseData as any).message;
-          } else if ((responseData as any).error) {
-            userMessage = (responseData as any).error;
-          } else {
-            try {
-              userMessage = JSON.stringify(responseData);
-            } catch {
-              userMessage = axiosErr.message;
-            }
           }
-        } else {
-          userMessage = axiosErr.message || userMessage;
         }
         toast.error(userMessage);
       } else if (err instanceof Error) {
-        console.error('Erro não-Axios:', err);
         toast.error(err.message);
       } else {
         toast.error('Erro ao criar evento');

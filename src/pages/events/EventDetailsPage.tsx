@@ -1,3 +1,4 @@
+// src/pages/events/EventDetailsPage.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -8,19 +9,26 @@ import {
   CardMedia,
   CardContent,
   Button,
+  Box,
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { EventData } from '../../data/EventData';
 import EventDetailsSkeleton from '../../components/skeletons/EventDetailsSkeleton';
 import { formatDatePt, formatHour } from '../../utils/dateTimeFormat';
 
+type EventImage = {
+  data: string;
+  contentType: string;
+};
+
 export default function EventDetailsPage() {
   const { id } = useParams();
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hideImage, setHideImage] = useState(false); // 👈 controla se a imagem deve sumir
-  const navigate = useNavigate();
+  const [hideFallbackImage, setHideFallbackImage] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  const navigate = useNavigate();
   const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
   const handleHomePage = () => navigate('/');
@@ -33,7 +41,9 @@ export default function EventDetailsPage() {
 
     const fetchEvent = async () => {
       try {
-        const response = await axios.get(`${baseUrl}/api/events/${id}`);
+        const response = await axios.get(
+          `${baseUrl}/api/events/${id}`,
+        );
         setEvent(response.data);
       } catch (error) {
         console.error('Erro ao buscar detalhes do evento:', error);
@@ -80,15 +90,16 @@ export default function EventDetailsPage() {
       ? `${horaInicioLabel} - ${horaFimLabel}`
       : horaInicioLabel;
 
-  // 👇 tenta detectar se esse evento TEM imagem salva no back
-  // se você sabe que o model tem `images` ou `imagem`, pode ajustar aqui
-  const hasImageField =
-    // se usar array de imagens no modelo:
-    Array.isArray((event as any).images) && (event as any).images.length > 0 ||
-    // ou se usar um campo único:
-    (event as any).imagem;
+  // 👇 tenta ler o array de imagens retornado pelo back
+  const images = (event as any).images as EventImage[] | undefined;
+  const hasImages = Array.isArray(images) && images.length > 0;
 
-  const shouldRenderImage = !hideImage && hasImageField;
+  // URL da imagem principal (capa da galeria)
+  const mainImageSrc = hasImages
+    ? `data:${images[selectedImageIndex].contentType};base64,${images[selectedImageIndex].data}`
+    : !hideFallbackImage
+    ? `${baseUrl}/api/events/image/${event._id}`
+    : undefined;
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
@@ -100,15 +111,59 @@ export default function EventDetailsPage() {
       </button>
 
       <Card>
-        {/* ✅ Só renderiza a imagem se realmente houver imagem */}
-        {shouldRenderImage && (
+        {/* IMAGEM PRINCIPAL */}
+        {mainImageSrc && (
           <CardMedia
             component="img"
-            height="300"
-            image={`${baseUrl}/api/events/image/${event._id}`}
+            height="320"
+            image={mainImageSrc}
             alt={event.titulo}
-            onError={() => setHideImage(true)} // 👈 se der 404/erro, esconde o componente
+            onError={() => setHideFallbackImage(true)}
           />
+        )}
+
+        {/* THUMBNAILS DA GALERIA */}
+        {hasImages && (
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              px: 2,
+              py: 1.5,
+              overflowX: 'auto',
+              borderBottom: '1px solid rgba(0,0,0,0.08)',
+            }}
+          >
+            {images.map((img, idx) => {
+              const thumbSrc = `data:${img.contentType};base64,${img.data}`;
+              const isSelected = idx === selectedImageIndex;
+              return (
+                <Box
+                  key={idx}
+                  component="img"
+                  src={thumbSrc}
+                  alt={`Imagem ${idx + 1}`}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  sx={{
+                    width: 72,
+                    height: 72,
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    border: isSelected
+                      ? '2px solid #1976d2'
+                      : '1px solid #ccc',
+                    opacity: isSelected ? 1 : 0.7,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      opacity: 1,
+                      boxShadow: 2,
+                    },
+                  }}
+                />
+              );
+            })}
+          </Box>
         )}
 
         <CardContent>
@@ -150,12 +205,15 @@ export default function EventDetailsPage() {
             </Typography>
           )}
 
-          {event.organizadores && event.organizadores.length > 0 && (
-            <Typography variant="body2" gutterBottom>
-              🧑‍💼 Organizadores:{' '}
-              {event.organizadores.map((org) => org.nome).join(', ')}
-            </Typography>
-          )}
+          {event.organizadores &&
+            event.organizadores.length > 0 && (
+              <Typography variant="body2" gutterBottom>
+                🧑‍💼 Organizadores:{' '}
+                {event.organizadores
+                  .map((org) => org.nome)
+                  .join(', ')}
+              </Typography>
+            )}
         </CardContent>
       </Card>
     </Container>

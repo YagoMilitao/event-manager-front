@@ -15,5 +15,5 @@ export interface CreateEventForm {
   preco: string;           // string no form, convertemos antes de enviar
   traje: string;
   organizadores: Organizer[];
-  image: File | null;
+  images: File[];
 }
