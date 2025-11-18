@@ -187,7 +187,7 @@ export function useCreateEventViewModel() {
 
       // várias imagens
       form.images.forEach((file) => {
-        formData.append('images', file); // 👈 BATE com upload.array("images")
+        formData.append('images', file);
       });
 
       console.log('📦 FormData enviado para create-with-images:');

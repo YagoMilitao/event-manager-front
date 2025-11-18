@@ -1,13 +1,15 @@
 import  { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios'; 
-import { Container, Typography, List, ListItem, ListItemText } from '@mui/material'; // Importa componentes visuais do Material UI
+import { Container, Typography, List, ListItem, ListItemText, Box } from '@mui/material'; // Importa componentes visuais do Material UI
 import { toast } from 'react-toastify'; 
 import LoginLogoutButtons from '../components/LoginLogoutButtons'; 
 import { EventData } from '../data/EventData';
 import { useAppSelector } from '../store/hooks'
 import EventListSkeleton from '../components/skeletons/EventListSkeleton';
 import { formatDatePt, formatHour } from '../utils/dateTimeFormat';
+import EventBadge from '../components/EventBadge';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 // Componente funcional HomePage
 export default function HomePage() {
@@ -112,8 +114,20 @@ export default function HomePage() {
         }}
        >
         <ListItemText
-         primary={event.titulo}
-         secondary={secondaryText}
+          primary={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {event.titulo}
+             {Array.isArray(event.image) && event.image.length > 0 && (
+              <EventBadge
+                icon={<PhotoCameraIcon />}
+                label={`${event.image.length} foto${event.image.length > 1 ? 's' : ''}`}
+                color="primary"
+                sx={{ ml: 1 }}
+              />
+            )}
+            </Box>
+          }
+          secondary={secondaryText}
         />
         {!isPast && (
          <Link to={`/api/events/${event._id}`} style={{ textDecoration: 'none' }}>

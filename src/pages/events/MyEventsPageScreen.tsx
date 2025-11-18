@@ -179,6 +179,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
                         Organizadores:{' '}
                         {event.organizadores.map((org) => org.nome).join(', ')}
                       </Typography>
+                     
                     )}
                   </CardContent>
 
@@ -187,7 +188,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
                       size="small"
                       variant="contained"
                       component={RouterLink}
-                      to={`/events/${event._id}`}
+                      to={`/api/events/${event._id}`}
                     >
                       Ver Detalhes
                     </Button>

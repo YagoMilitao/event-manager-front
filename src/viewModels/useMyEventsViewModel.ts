@@ -40,7 +40,7 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
       setError(null); // Limpa erros anteriores
 
       // Faz a requisição ao backend usando o token do Redux
-      const response = await api.get('/events/my-events', {
+      const response = await api.get('/api/events/my-event', {
         headers: {
           Authorization: `Bearer ${token}` // Envia o token para o backend
         }
