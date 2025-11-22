@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../../store/hooks';
 import { CreateEventForm, Organizer } from '../../data/CreateEventData';
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 
 const initialOrganizer: Organizer = {
   nome: '',
@@ -88,6 +90,13 @@ export function useCreateEventViewModel() {
     setForm((prev) => ({
       ...prev,
       organizadores: prev.organizadores.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleTimeChange = (name: 'horaInicio' | 'horaFim', value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
@@ -234,7 +243,7 @@ export function useCreateEventViewModel() {
         }
         toast.error(userMessage);
       } else if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(getApiErrorMessage(err));
       } else {
         toast.error('Erro ao criar evento');
       }
@@ -248,6 +257,7 @@ export function useCreateEventViewModel() {
     handleChange,
     handleImageChange,
     handleOrganizerChange,
+    handleTimeChange,
     handleAddOrganizer,
     handleRemoveOrganizer,
     handleSubmit,
