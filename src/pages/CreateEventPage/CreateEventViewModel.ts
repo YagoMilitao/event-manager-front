@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useAppSelector } from '../../store/hooks';
 import { CreateEventForm, Organizer } from '../../data/CreateEventData';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
+import { useNavigate } from 'react-router-dom';
 
 const initialOrganizer: Organizer = {
   nome: '',
@@ -35,7 +36,7 @@ function normalizePrice(raw: string | number | null | undefined): string {
 
 export function useCreateEventViewModel() {
   const token = useAppSelector((state) => state.auth.token);
-
+  const navigate = useNavigate();
   const [form, setForm] = useState<CreateEventForm>({
     titulo: '',
     descricao: '',
@@ -177,6 +178,7 @@ export function useCreateEventViewModel() {
         );
 
         toast.success('Evento criado com sucesso!');
+        navigate('/my-events');
         return true;
       }
 
@@ -210,12 +212,12 @@ export function useCreateEventViewModel() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            // NÃO setar 'Content-Type', o browser/axios define o boundary
           },
         },
       );
 
       toast.success('Evento com imagens criado com sucesso!');
+      navigate('/my-events');
       return true;
     } catch (err: unknown) {
       console.error('Erro ao criar evento:', err);
@@ -247,7 +249,6 @@ export function useCreateEventViewModel() {
       } else {
         toast.error('Erro ao criar evento');
       }
-
       return false;
     }
   };

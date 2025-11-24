@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function getApiErrorMessage(error: any): string {
   const res = error?.response;
 

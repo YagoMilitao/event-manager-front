@@ -5,9 +5,17 @@ import { SxProps, Theme } from '@mui/material';
 interface EventBadgeProps {
   icon?: React.ReactElement;
   label: string;
-  color?: "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning";
-  variant?: "filled" | "outlined";
+  color?:
+    | 'default'
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning';
+  variant?: 'filled' | 'outlined';
   clickable?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
   sx?: SxProps<Theme>;
 }
@@ -15,9 +23,10 @@ interface EventBadgeProps {
 export default function EventBadge({
   icon,
   label,
-  color = "primary",
-  variant = "outlined",
+  color = 'primary',
+  variant = 'outlined',
   clickable = false,
+  disabled = false,
   onClick,
   sx = {},
 }: EventBadgeProps) {
@@ -27,11 +36,16 @@ export default function EventBadge({
       label={label}
       color={color}
       variant={variant}
-      clickable={clickable}
-      onClick={onClick}
+      clickable={clickable && !disabled}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       sx={{
-        borderRadius: "6px",
+        borderRadius: '6px',
         fontWeight: 500,
+        ...(disabled && {
+          opacity: 0.5,
+          cursor: 'not-allowed',
+        }),
         ...sx,
       }}
     />
