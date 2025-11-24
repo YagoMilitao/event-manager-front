@@ -124,23 +124,6 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
-      <AppBar position="static" sx={{ mb: 4 }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Meus Eventos
-          </Typography>
-          <Button color="inherit" component={RouterLink} to="/">
-            Home
-          </Button>
-          <Button color="inherit" component={RouterLink} to="/create-event">
-            Criar Novo Evento
-          </Button>
-          <Button color="inherit" onClick={onLogout}>
-            Sair
-          </Button>
-        </Toolbar>
-      </AppBar>
-
       <Box
         sx={{
           mb: 2,
