@@ -7,6 +7,7 @@ import {
   Grid,
   Stack,
   Box,
+  CircularProgress,
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { ChangeEvent } from 'react';
@@ -286,7 +287,14 @@ export default function EventForm({
             onClick={onSubmit}
             disabled={loading}
           >
-            {loading ? 'Salvando...' : buttonLabel}
+            {loading ? (
+              <>
+                <CircularProgress size={18} sx={{ mr: 1 }} />
+                {mode === 'create' ? 'Salvando...' : 'Atualizando...'}
+              </>
+            ) : (
+              buttonLabel
+            )}
           </Button>
         </Stack>
       </Paper>

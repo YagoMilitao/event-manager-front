@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
-import HomePage from '../pages/HomePage';
+import HomePageScreen from '../pages/HomePageScreen';
 import LoginPage from '../pages/LoginPage';
 import { JSX } from 'react/jsx-runtime';
 import EventDetailsPage from '../pages/events/EventDetailsPage';
@@ -12,12 +12,14 @@ import CreateEventPageScreen from '../pages/CreateEventPage/CreateEventPageSceen
 import EditEventPageScreen from '../pages/EditEventPage/EditEventPageScreen';
 import AppLayout from '../components/layout/AppLayout';
 
+
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
   return token ? children : <Navigate to="/login" />;
 };
 
 export default function RouterApp() {
+ 
   return (
     <BrowserRouter>
       <Routes>
@@ -25,7 +27,7 @@ export default function RouterApp() {
           <Route 
             path="/" 
             element={
-              <HomePage />
+              <HomePageScreen  />
             } 
           />
           <Route 

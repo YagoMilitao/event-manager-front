@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const { form, handleChange, handleSubmit } = useLoginViewModel();
-  const navigate = useNavigate(); // Para redirecionar
+  const navigate = useNavigate();
   const handleMain = () => {
     navigate('/')
   }

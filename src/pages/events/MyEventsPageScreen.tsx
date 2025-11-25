@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Container,
@@ -8,8 +8,6 @@ import {
   CardActions,
   Button,
   Alert,
-  AppBar,
-  Toolbar,
   Box,
   Skeleton,
   Grid,
@@ -30,64 +28,53 @@ import { formatHour, formatDatePt } from '../../utils/dateTimeFormat';
 import EventBadge from '../../components/EventBadge';
 
 interface MyEventsPageScreenProps {
+  // dados
   events: EventData[];
+  visibleEvents: EventData[];
+  selectedEvents: EventData[];
+
+  // estados
   loading: boolean;
   error: string | null;
-  onLogout: () => void;
-  onDeleteSelected: (ids: string[]) => Promise<void>;
+  selectedIds: string[];
+  isAllSelected: boolean;
+  canLoadMore: boolean;
+  confirmOpen: boolean;
+  deleting: boolean;
+
+  // actions
+  handleToggleSelect: (id: string) => void;
+  handleToggleSelectAll: () => void;
+  handleOpenConfirm: () => void;
+  handleCloseConfirm: () => void;
+  handleConfirmDelete: () => void;
+  handleLoadMore: () => void;
 }
 
 const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
   events,
+  visibleEvents,
+  selectedEvents,
   loading,
   error,
-  onLogout,
-  onDeleteSelected,
+  selectedIds,
+  isAllSelected,
+  canLoadMore,
+  confirmOpen,
+  deleting,
+  handleToggleSelect,
+  handleToggleSelectAll,
+  handleOpenConfirm,
+  handleCloseConfirm,
+  handleConfirmDelete,
+  handleLoadMore,
 }) => {
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  const allIds = useMemo(() => events.map((e) => e._id), [events]);
-  const isAllSelected =
-    allIds.length > 0 && selectedIds.length === allIds.length;
-
-  const handleToggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    );
-  };
-
-  const handleToggleSelectAll = () => {
-    setSelectedIds((prev) => (prev.length === allIds.length ? [] : allIds));
-  };
-
-  const handleOpenConfirm = () => {
-    if (!selectedIds.length) return;
-    setConfirmOpen(true);
-  };
-
-  const handleCloseConfirm = () => {
-    if (deleting) return;
-    setConfirmOpen(false);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedIds.length) return;
-    try {
-      setDeleting(true);
-      await onDeleteSelected(selectedIds);
-      setSelectedIds([]);
-      setConfirmOpen(false);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
+  // 👉 loading state
   if (loading) {
     return (
       <Container
         sx={{
+          mt: 4,
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
@@ -104,6 +91,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
     );
   }
 
+  // 👉 erro
   if (error) {
     return (
       <Container sx={{ mt: 4, textAlign: 'center' }}>
@@ -120,10 +108,9 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
     );
   }
 
-  const selectedEvents = events.filter((e) => selectedIds.includes(e._id));
-
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
+      {/* Header + ações */}
       <Box
         sx={{
           mb: 2,
@@ -139,8 +126,8 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          {/* Selecionar todos */}
           {events.length > 0 && (
+            console.log("events.length",events.length),
             <>
               <EventBadge
                 icon={<SelectAllIcon fontSize="small" />}
@@ -149,8 +136,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
                 clickable
                 onClick={handleToggleSelectAll}
               />
-
-              {/* Lixeira - só ativa se tiver algo selecionado */}
+              
               <EventBadge
                 icon={<DeleteOutlineIcon fontSize="small" />}
                 label={
@@ -169,6 +155,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
         </Box>
       </Box>
 
+      {/* Lista / cards */}
       {events.length === 0 ? (
         <Typography variant="body1" align="center" sx={{ mt: 4 }}>
           Você ainda não criou nenhum evento.{' '}
@@ -176,7 +163,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
         </Typography>
       ) : (
         <Grid container spacing={3}>
-          {events.map((event) => {
+          {visibleEvents.map((event) => {
             const isSelected = selectedIds.includes(event._id);
             const dateLabel = formatDatePt(event.data as unknown as string);
             const horaInicioLabel = formatHour(event.horaInicio as any);
@@ -238,7 +225,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
 
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Typography gutterBottom variant="h5" component="div">
-                      {event.titulo || event.descricao}
+                      {event.titulo}
                     </Typography>
 
                     {event.descricao && (
@@ -356,6 +343,14 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {canLoadMore && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Button variant="outlined" onClick={handleLoadMore}>
+            Carregar mais
+          </Button>
+        </Box>
+      )}
     </Container>
   );
 };

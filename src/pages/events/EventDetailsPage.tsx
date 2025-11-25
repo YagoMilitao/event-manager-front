@@ -1,52 +1,63 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/pages/events/EventDetailsPage.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container,
-  Typography,
-  Card,
-  CardMedia,
-  CardContent,
-  Button,
   Box,
+  Card,
+  CardContent,
+  CardMedia,
+  Container,
+  IconButton,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Button,
+  Typography,
 } from '@mui/material';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import PlaceIcon from '@mui/icons-material/Place';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CheckroomIcon from '@mui/icons-material/Checkroom';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import EmailIcon from '@mui/icons-material/Email';
+import ShareIcon from '@mui/icons-material/Share';
 import { toast } from 'react-toastify';
+
 import { EventData } from '../../data/EventData';
 import EventDetailsSkeleton from '../../components/skeletons/EventDetailsSkeleton';
 import { formatDatePt, formatHour } from '../../utils/dateTimeFormat';
-
-type EventImage = {
-  data: string;
-  contentType: string;
-};
 
 export default function EventDetailsPage() {
   const { id } = useParams();
   const [event, setEvent] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hideFallbackImage, setHideFallbackImage] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
   const navigate = useNavigate();
+
   const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
   const handleHomePage = () => navigate('/');
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-
     const fetchEvent = async () => {
+      if (!id) {
+        toast.error('ID do evento não encontrado.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(
+        setLoading(true);
+        const response = await axios.get<EventData>(
           `${baseUrl}/api/events/${id}`,
         );
         setEvent(response.data);
       } catch (error) {
-        console.error('Erro ao buscar detalhes do evento:', error);
+        console.error(error);
         toast.error('Erro ao buscar detalhes do evento');
       } finally {
         setLoading(false);
@@ -55,6 +66,30 @@ export default function EventDetailsPage() {
 
     fetchEvent();
   }, [id, baseUrl]);
+
+  const handleShare = async () => {
+    if (!event) return;
+
+    const url = window.location.href;
+    const title = event.titulo || 'Evento';
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title,
+          text: `Dá uma olhada nesse evento: ${title}`,
+          url,
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        toast.success('Link do evento copiado para a área de transferência!');
+      } else {
+        toast.info('Seu navegador não suporta compartilhamento automático.');
+      }
+    } catch (err) {
+      console.error('Erro ao compartilhar:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -67,153 +102,176 @@ export default function EventDetailsPage() {
   if (!event) {
     return (
       <Container sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Evento não encontrado
-        </Typography>
-        <Button
-          variant="outlined"
-          onClick={handleHomePage}
-          sx={{ mt: 2 }}
-        >
+        <Typography variant="h5">Evento não encontrado</Typography>
+        <Button variant="outlined" onClick={handleHomePage} sx={{ mt: 2 }}>
           Home
         </Button>
       </Container>
     );
   }
 
-  const dateLabel = formatDatePt(event.data as unknown as string);
+  const dateLabel = event.data ? formatDatePt(event.data as any) : '';
   const horaInicioLabel = formatHour(event.horaInicio as any);
   const horaFimLabel = formatHour(event.horaFim as any);
 
-  const timeRangeLabel =
-    horaInicioLabel && horaFimLabel
-      ? `${horaInicioLabel} - ${horaFimLabel}`
-      : horaInicioLabel;
-
-  // 👇 tenta ler o array de imagens retornado pelo back
-  const images = (event as any).images as EventImage[] | undefined;
-  const hasImages = Array.isArray(images) && images.length > 0;
-
-  // URL da imagem principal (capa da galeria)
-  const mainImageSrc = hasImages
-    ? `data:${images[selectedImageIndex].contentType};base64,${images[selectedImageIndex].data}`
-    : !hideFallbackImage
-    ? `${baseUrl}/api/events/image/${event._id}`
-    : undefined;
-
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
-      <button
-        onClick={() => navigate(-1)}
-        style={{ marginBottom: '1rem' }}
-      >
+      <Button onClick={() => navigate(-1)} sx={{ mb: 2 }}>
         🔙 Voltar
-      </button>
+      </Button>
 
       <Card>
-        {/* IMAGEM PRINCIPAL */}
-        {mainImageSrc && (
+        {/* Galeria simples: se tiver imagem de capa */}
+        {event.image && (
           <CardMedia
             component="img"
-            height="320"
-            image={mainImageSrc}
+            height="300"
+            image={`${baseUrl}/api/events/image/${event._id}`}
             alt={event.titulo}
-            onError={() => setHideFallbackImage(true)}
           />
         )}
 
-        {/* THUMBNAILS DA GALERIA */}
-        {hasImages && (
+        <CardContent>
           <Box
             sx={{
               display: 'flex',
-              gap: 1,
-              px: 2,
-              py: 1.5,
-              overflowX: 'auto',
-              borderBottom: '1px solid rgba(0,0,0,0.08)',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 2,
+              flexWrap: 'wrap',
             }}
           >
-            {images.map((img, idx) => {
-              const thumbSrc = `data:${img.contentType};base64,${img.data}`;
-              const isSelected = idx === selectedImageIndex;
-              return (
-                <Box
-                  key={idx}
-                  component="img"
-                  src={thumbSrc}
-                  alt={`Imagem ${idx + 1}`}
-                  onClick={() => setSelectedImageIndex(idx)}
-                  sx={{
-                    width: 72,
-                    height: 72,
-                    objectFit: 'cover',
-                    borderRadius: 1,
-                    cursor: 'pointer',
-                    border: isSelected
-                      ? '2px solid #1976d2'
-                      : '1px solid #ccc',
-                    opacity: isSelected ? 1 : 0.7,
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      opacity: 1,
-                      boxShadow: 2,
-                    },
-                  }}
-                />
-              );
-            })}
-          </Box>
-        )}
-
-        <CardContent>
-          <Typography variant="h4" gutterBottom>
-            {event.titulo}
-          </Typography>
-
-          <Typography variant="body1" gutterBottom>
-            {event.descricao || 'Sem descrição'}
-          </Typography>
-
-          {dateLabel && (
-            <Typography variant="body2" gutterBottom>
-              📅 {dateLabel}
-            </Typography>
-          )}
-
-          {timeRangeLabel && (
-            <Typography variant="body2" gutterBottom>
-              🕒 {timeRangeLabel}
-            </Typography>
-          )}
-
-          {event.local && (
-            <Typography variant="body2" gutterBottom>
-              📍 {event.local}
-            </Typography>
-          )}
-
-          {event.preco && (
-            <Typography variant="body2" gutterBottom>
-              💸 Preço: {event.preco}
-            </Typography>
-          )}
-
-          {event.traje && (
-            <Typography variant="body2" gutterBottom>
-              🎽 Traje: {event.traje}
-            </Typography>
-          )}
-
-          {event.organizadores &&
-            event.organizadores.length > 0 && (
-              <Typography variant="body2" gutterBottom>
-                🧑‍💼 Organizadores:{' '}
-                {event.organizadores
-                  .map((org) => org.nome)
-                  .join(', ')}
+            <Box>
+              <Typography variant="h4" gutterBottom>
+                {event.titulo}
               </Typography>
+              {event.descricao && (
+                <Typography variant="body1" gutterBottom>
+                  {event.descricao}
+                </Typography>
+              )}
+            </Box>
+
+            <IconButton
+              color="primary"
+              aria-label="Compartilhar evento"
+              onClick={handleShare}
+            >
+              <ShareIcon />
+            </IconButton>
+          </Box>
+
+          {/* Info principal */}
+          <List dense sx={{ mt: 2 }}>
+            {dateLabel && (
+              <ListItem>
+                <ListItemIcon>
+                  <CalendarTodayIcon />
+                </ListItemIcon>
+                <ListItemText primary={dateLabel} />
+              </ListItem>
             )}
+
+            {(horaInicioLabel || horaFimLabel) && (
+              <ListItem>
+                <ListItemIcon>
+                  <ScheduleIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    horaFimLabel
+                      ? `${horaInicioLabel} - ${horaFimLabel}`
+                      : horaInicioLabel
+                  }
+                />
+              </ListItem>
+            )}
+
+            {event.local && (
+              <ListItem>
+                <ListItemIcon>
+                  <PlaceIcon />
+                </ListItemIcon>
+                <ListItemText primary={event.local} />
+              </ListItem>
+            )}
+
+            {event.preco && (
+              <ListItem>
+                <ListItemIcon>
+                  <AttachMoneyIcon />
+                </ListItemIcon>
+                <ListItemText primary={`Preço: ${event.preco}`} />
+              </ListItem>
+            )}
+
+            {event.traje && (
+              <ListItem>
+                <ListItemIcon>
+                  <CheckroomIcon />
+                </ListItemIcon>
+                <ListItemText primary={`Traje: ${event.traje}`} />
+              </ListItem>
+            )}
+          </List>
+
+          {/* Organizadores */}
+          {event.organizadores && event.organizadores.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Organizadores
+              </Typography>
+
+              <List dense>
+                {event.organizadores.map((org, idx) => (
+                  <ListItem key={idx} sx={{ alignItems: 'flex-start' }}>
+                    <ListItemText
+                      primary={org.nome}
+                      secondary={org.email || org.whatsapp || org.instagram}
+                    />
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      {org.email && (
+                        <IconButton
+                          size="small"
+                          component="a"
+                          href={`mailto:${org.email}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <EmailIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                      {org.whatsapp && (
+                        <IconButton
+                          size="small"
+                          component="a"
+                          href={`https://wa.me/${org.whatsapp.replace(
+                            /\D/g,
+                            '',
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <WhatsAppIcon fontSize="small" color="success" />
+                        </IconButton>
+                      )}
+                      {org.instagram && (
+                        <IconButton
+                          size="small"
+                          component="a"
+                          href={org.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <InstagramIcon fontSize="small" color="secondary" />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Container>

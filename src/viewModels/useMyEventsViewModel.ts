@@ -13,7 +13,7 @@ interface MyEventsViewModel {
   loading: boolean;
   error: string | null;
   handleLogout: () => void;
-  onDeleteSelected: (ids: string[]) => Promise<void>;
+  handleDeleteSelected: (ids: string[]) => Promise<void>;
 }
 
 export const useMyEventsViewModel = (): MyEventsViewModel => {
@@ -78,7 +78,7 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
     }
   }, [navigate]);
 
-  const onDeleteSelected = useCallback(
+  const handleDeleteSelected= useCallback(
     async (ids: string[]) => {
       if (!token) {
         toast.error('Você precisa estar logado para excluir eventos.');
@@ -131,6 +131,6 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
     loading,
     error,
     handleLogout,
-    onDeleteSelected,
+    handleDeleteSelected,
   };
 };
