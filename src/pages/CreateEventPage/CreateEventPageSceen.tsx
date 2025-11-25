@@ -42,7 +42,7 @@ export default function CreateEventPageScreen() {
   }
 
   const handleSaveClick = async () => {
-    await handleSubmit(); // sua lógica já navega/toasta etc
+    await handleSubmit();
   };
 
   return (

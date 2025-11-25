@@ -12,7 +12,7 @@ const CreateEvent = () => {
 
   const handleCreateEvent = async () => {
     try {
-      const token = localStorage.getItem('token'); // ou de onde você pegar o Firebase ID token
+      const token = localStorage.getItem('token'); 
 
       // 1. Cria o evento sem imagens
       const { data } = await axios.post(

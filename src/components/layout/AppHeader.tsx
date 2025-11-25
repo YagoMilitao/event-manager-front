@@ -4,11 +4,18 @@ import {
   Typography,
   Button,
   Box,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { clearToken } from '../../store/authSlice';
+import { useContext } from 'react';
+import { ColorModeContext } from '../../theme/ColorModeContext';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+
 
 export default function AppHeader() {
   const location = useLocation();
@@ -16,12 +23,13 @@ export default function AppHeader() {
   const token = useSelector((state: RootState) => state.auth.token);
   const dispatch = useDispatch();
  
+  const { mode, toggleColorMode } = useContext(ColorModeContext);
 
   const handleLogout = () => {
     dispatch(clearToken());
     navigate('/login');
   };
-  // Se quiser esconder o header em algumas rotas:
+  // Esconder o header em algumas rotas:
   const hideHeaderOnRoutes = ['/login', '/register'];
   if (hideHeaderOnRoutes.includes(location.pathname)) {
     return null;
@@ -41,6 +49,18 @@ export default function AppHeader() {
         >
           Event Manager
         </Typography>
+
+        {/* Botão toggle de tema */}
+        <Tooltip title={mode === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}>
+          <IconButton
+            color="inherit"
+            onClick={toggleColorMode}
+            sx={{ mr: 1 }}
+            size="large"
+          >
+            {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+          </IconButton>
+        </Tooltip>
 
         {/* Links principais */}
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -69,9 +89,6 @@ export default function AppHeader() {
             <>
               <Button color="inherit" component={RouterLink} to="/login">
                 Entrar
-              </Button>
-              <Button color="inherit" component={RouterLink} to="/register">
-                Registrar
               </Button>
             </>
           )}

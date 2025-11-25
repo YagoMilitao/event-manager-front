@@ -12,7 +12,7 @@ export interface CreateEventForm {
   horaInicio: string;
   horaFim: string;
   local: string;
-  preco: string;           // string no form, convertemos antes de enviar
+  preco: string;
   traje: string;
   organizadores: Organizer[];
   images: File[];

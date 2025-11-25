@@ -1,12 +1,13 @@
+// src/viewModels/useHomePageViewModel.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import api from '../api/api';
 import { EventData } from '../data/EventData';
 import { toast } from 'react-toastify';
 
-export type SortBy = 'nearest' | 'newest' | 'cheapest';
+type SortBy = 'nearest' | 'newest' | 'cheapest';
 
-export interface HomeFilters {
+interface HomeFilters {
   searchText: string;
   city: string;
   dateFrom: string;
@@ -14,12 +15,11 @@ export interface HomeFilters {
   priceMin: string;
   priceMax: string;
   attire: string;
-  showPast: boolean;
   sortBy: SortBy;
+  showPast: boolean;
 }
 
 export interface HomePageViewModel {
-  events: EventData[];
   visibleEvents: EventData[];
   loading: boolean;
   error: string | null;
@@ -31,7 +31,7 @@ export interface HomePageViewModel {
   handleDateChange: (field: 'dateFrom' | 'dateTo', value: string) => void;
   handlePriceChange: (field: 'priceMin' | 'priceMax', value: string) => void;
   handleAttireChange: (value: string) => void;
-  handleShowPastChange: (checked: boolean) => void;
+  handleShowPastChange: (value: boolean) => void;
   handleSortChange: (value: SortBy) => void;
   handleClearFilters: () => void;
   handleLoadMore: () => void;
@@ -39,40 +39,35 @@ export interface HomePageViewModel {
 
 const PAGE_SIZE = 10;
 
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function parsePrice(preco?: any): number | null {
-  if (preco === null || preco === undefined || preco === '') return null;
-  if (typeof preco === 'number') return preco;
-  if (typeof preco === 'string') {
-    const normalized = preco.replace('.', '').replace(',', '.');
-    const num = Number(normalized);
-    return Number.isNaN(num) ? null : num;
-  }
-  return null;
-}
+const createInitialFilters = (): HomeFilters => ({
+  searchText: '',
+  city: '',
+  dateFrom: '',
+  dateTo: '',
+  priceMin: '',
+  priceMax: '',
+  attire: '',
+  sortBy: 'nearest',
+  showPast: false,
+});
 
 export function useHomePageViewModel(): HomePageViewModel {
   const [events, setEvents] = useState<EventData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [filters, setFilters] = useState<HomeFilters>(createInitialFilters);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef<number | undefined>(undefined);
+
   const [page, setPage] = useState(1);
 
-  const [filters, setFilters] = useState<HomeFilters>({
-    searchText: '',
-    city: '',
-    dateFrom: '',
-    dateTo: '',
-    priceMin: '',
-    priceMax: '',
-    attire: '',
-    showPast: false,
-    sortBy: 'nearest',
-  });
-
+  // =============================
+  // Fetch de eventos (uma vez)
+  // =============================
   useEffect(() => {
+    let cancelled = false;
+
     const fetchEvents = async () => {
       try {
         setLoading(true);
@@ -83,181 +78,266 @@ export function useHomePageViewModel(): HomePageViewModel {
           ? response.data
           : response.data.events || [];
 
-        setEvents(data);
+        if (!cancelled) {
+          setEvents(data);
+        }
       } catch (err: any) {
-        console.error('🔥 Erro ao buscar eventos:', err?.response?.data || err);
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          'Erro ao carregar eventos. Tente novamente.';
-        setError(msg);
-        toast.error(msg);
+        console.error('❌ Erro ao carregar eventos:', err?.response?.data || err);
+        if (!cancelled) {
+          const msg =
+            err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            'Erro ao carregar eventos. Tente novamente.';
+          setError(msg);
+          toast.error(msg);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchEvents();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const filteredEvents = useMemo(() => {
-    const today = startOfDay(new Date());
-
-    return events.filter((event) => {
-      const eventDate = event.data ? startOfDay(new Date(event.data)) : today;
-      const diffDays =
-        (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-
-      // regra base: não mostrar eventos muito antigos,
-      // só ontem, hoje e futuros — a não ser que o usuário escolha ver passados
-      if (!filters.showPast && diffDays < -1) {
-        return false;
-      }
-
-      // filtro texto (nome / titulo / descrição)
-      const search = filters.searchText.trim().toLowerCase();
-      if (search) {
-        const alvo = [
-          (event.titulo || '').toLowerCase(),
-          (event.descricao || '').toLowerCase(),
-        ].join(' ');
-        if (!alvo.includes(search)) return false;
-      }
-
-      // filtro cidade/local
-      const city = filters.city.trim().toLowerCase();
-      if (city && !(event.local || '').toLowerCase().includes(city)) {
-        return false;
-      }
-
-      // filtro data from/to
-      if (filters.dateFrom) {
-        const fromDate = startOfDay(new Date(filters.dateFrom));
-        if (eventDate < fromDate) return false;
-      }
-
-      if (filters.dateTo) {
-        const toDate = startOfDay(new Date(filters.dateTo));
-        if (eventDate > toDate) return false;
-      }
-
-      // filtro price
-      const price = parsePrice((event as any).preco);
-      const min = filters.priceMin ? Number(filters.priceMin) : null;
-      const max = filters.priceMax ? Number(filters.priceMax) : null;
-
-      if (min !== null && price !== null && price < min) return false;
-      if (max !== null && price !== null && price > max) return false;
-
-      // filtro traje
-      const attireFilter = filters.attire.trim().toLowerCase();
-      if (
-        attireFilter &&
-        !(event.traje || '').toLowerCase().includes(attireFilter)
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [events, filters]);
-
-  const sortedEvents = useMemo(() => {
-    const copy = [...filteredEvents];
-
-    if (filters.sortBy === 'nearest') {
-      return copy.sort((a, b) => {
-        const da = a.data ? new Date(a.data) : new Date();
-        const db = b.data ? new Date(b.data) : new Date();
-        return da.getTime() - db.getTime();
-      });
+  // =============================
+  // Debounce da busca por texto
+  // =============================
+  useEffect(() => {
+    // limpa timer antigo
+    if (searchDebounceRef.current) {
+      window.clearTimeout(searchDebounceRef.current);
     }
 
-    if (filters.sortBy === 'newest') {
-      return copy.sort((a, b) => {
-        const da = a.data ? new Date(a.data) : new Date();
-        const db = b.data ? new Date(b.data) : new Date();
-        return db.getTime() - da.getTime();
-      });
-    }
+    searchDebounceRef.current = window.setTimeout(() => {
+      setDebouncedSearch(filters.searchText.trim().toLowerCase());
+    }, 300); // 300ms
 
-    // cheapest
-    return copy.sort((a, b) => {
-      const pa = parsePrice((a as any).preco) ?? Number.MAX_SAFE_INTEGER;
-      const pb = parsePrice((b as any).preco) ?? Number.MAX_SAFE_INTEGER;
-      return pa - pb;
-    });
-  }, [filteredEvents, filters.sortBy]);
+    return () => {
+      if (searchDebounceRef.current) {
+        window.clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [filters.searchText]);
 
+  // =============================
+  // Helpers de datas
+  // =============================
+  /*const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);*/
+
+  const yesterday = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  // =============================
+  // Aplica filtros e ordenação
+  // =============================
+  const filteredAndSorted = useMemo(() => {
+    if (!events.length) return [];
+
+    return (
+      events
+        // 1) Filtro por passado / futuro
+        .filter((event) => {
+          const eventDate = event.data ? new Date(event.data) : null;
+          if (!eventDate) return false;
+
+          const eventDay = new Date(eventDate);
+          eventDay.setHours(0, 0, 0, 0);
+
+          // Regra base: só mostra hoje, amanhã, futuros e ontem
+          if (!filters.showPast) {
+            // se é mais antigo que ontem, some
+            if (eventDay < yesterday) return false;
+          }
+
+          return true;
+        })
+
+        // 2) Filtro por dataFrom / dateTo
+        .filter((event) => {
+          if (!filters.dateFrom && !filters.dateTo) return true;
+
+          const eventDate = event.data ? new Date(event.data) : null;
+          if (!eventDate) return false;
+
+          const eventTime = eventDate.getTime();
+
+          if (filters.dateFrom) {
+            const from = new Date(filters.dateFrom);
+            from.setHours(0, 0, 0, 0);
+            if (eventTime < from.getTime()) return false;
+          }
+
+          if (filters.dateTo) {
+            const to = new Date(filters.dateTo);
+            to.setHours(23, 59, 59, 999);
+            if (eventTime > to.getTime()) return false;
+          }
+
+          return true;
+        })
+
+        // 3) Filtro por texto (debounced)
+        .filter((event) => {
+          if (!debouncedSearch) return true;
+
+          const nome = (event.titulo || '').toLowerCase();
+          const descricao = (event.descricao || '').toLowerCase();
+
+          return (
+            nome.includes(debouncedSearch) || descricao.includes(debouncedSearch)
+          );
+        })
+
+        // 4) Filtro por cidade / local
+        .filter((event) => {
+          if (!filters.city.trim()) return true;
+          const local = (event.local || '').toLowerCase();
+          return local.includes(filters.city.trim().toLowerCase());
+        })
+
+        // 5) Filtro por preço (min/max)
+        .filter((event) => {
+          const rawPreco = event.preco ?? '';
+          const numeroPreco = Number(
+            String(rawPreco).replace(/[^\d.,]/g, '').replace(',', '.'),
+          );
+
+          if (filters.priceMin) {
+            const min = Number(filters.priceMin.replace(',', '.'));
+            if (!Number.isNaN(min) && !Number.isNaN(numeroPreco)) {
+              if (numeroPreco < min) return false;
+            }
+          }
+
+          if (filters.priceMax) {
+            const max = Number(filters.priceMax.replace(',', '.'));
+            if (!Number.isNaN(max) && !Number.isNaN(numeroPreco)) {
+              if (numeroPreco > max) return false;
+            }
+          }
+
+          return true;
+        })
+
+        // 6) Filtro por traje
+        .filter((event) => {
+          if (!filters.attire.trim()) return true;
+          const traje = (event.traje || '').toLowerCase();
+          return traje.includes(filters.attire.trim().toLowerCase());
+        })
+
+        // 7) Ordenação
+        .sort((a, b) => {
+          if (filters.sortBy === 'nearest') {
+            const da = a.data ? new Date(a.data).getTime() : Infinity;
+            const db = b.data ? new Date(b.data).getTime() : Infinity;
+            return da - db;
+          }
+
+          if (filters.sortBy === 'newest') {
+            // mais recentes primeiro
+            const da = a.data ? new Date(a.data).getTime() : 0;
+            const db = b.data ? new Date(b.data).getTime() : 0;
+            return db - da;
+          }
+
+          if (filters.sortBy === 'cheapest') {
+            const pa = Number(
+              String(a.preco ?? '').replace(/[^\d.,]/g, '').replace(',', '.'),
+            );
+            const pb = Number(
+              String(b.preco ?? '').replace(/[^\d.,]/g, '').replace(',', '.'),
+            );
+            const na = Number.isNaN(pa) ? Infinity : pa;
+            const nb = Number.isNaN(pb) ? Infinity : pb;
+            return na - nb;
+          }
+
+          return 0;
+        })
+    );
+  }, [events, filters, debouncedSearch, yesterday]);
+
+  // =============================
+  // Paginação em memória
+  // =============================
   const visibleEvents = useMemo(
-    () => sortedEvents.slice(0, page * PAGE_SIZE),
-    [sortedEvents, page],
+    () => filteredAndSorted.slice(0, page * PAGE_SIZE),
+    [filteredAndSorted, page],
   );
 
-  const canLoadMore = visibleEvents.length < sortedEvents.length;
+  const canLoadMore = visibleEvents.length < filteredAndSorted.length;
 
-  // handlers de filtro
-  const handleSearchChange = (value: string) => {
-    setPage(1);
+  // =============================
+  // Handlers dos filtros
+  // =============================
+  const handleSearchChange = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, searchText: value }));
-  };
-
-  const handleCityChange = (value: string) => {
     setPage(1);
+  }, []);
+
+  const handleCityChange = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, city: value }));
-  };
-
-  const handleDateChange = (field: 'dateFrom' | 'dateTo', value: string) => {
     setPage(1);
-    setFilters((prev) => ({ ...prev, [field]: value }));
-  };
+  }, []);
 
-  const handlePriceChange = (
-    field: 'priceMin' | 'priceMax',
-    value: string,
-  ) => {
-    // só número e vírgula/ponto
-    const sanitized = value.replace(/[^\d.,]/g, '');
-    setPage(1);
-    setFilters((prev) => ({ ...prev, [field]: sanitized }));
-  };
+  const handleDateChange = useCallback(
+    (field: 'dateFrom' | 'dateTo', value: string) => {
+      setFilters((prev) => ({ ...prev, [field]: value }));
+      setPage(1);
+    },
+    [],
+  );
 
-  const handleAttireChange = (value: string) => {
-    setPage(1);
+  const handlePriceChange = useCallback(
+    (field: 'priceMin' | 'priceMax', value: string) => {
+      setFilters((prev) => ({ ...prev, [field]: value }));
+      setPage(1);
+    },
+    [],
+  );
+
+  const handleAttireChange = useCallback((value: string) => {
     setFilters((prev) => ({ ...prev, attire: value }));
-  };
-
-  const handleShowPastChange = (checked: boolean) => {
     setPage(1);
-    setFilters((prev) => ({ ...prev, showPast: checked }));
-  };
+  }, []);
 
-  const handleSortChange = (value: SortBy) => {
+  const handleShowPastChange = useCallback((value: boolean) => {
+    setFilters((prev) => ({ ...prev, showPast: value }));
     setPage(1);
+  }, []);
+
+  const handleSortChange = useCallback((value: SortBy) => {
     setFilters((prev) => ({ ...prev, sortBy: value }));
-  };
-
-  const handleClearFilters = () => {
     setPage(1);
-    setFilters({
-      searchText: '',
-      city: '',
-      dateFrom: '',
-      dateTo: '',
-      priceMin: '',
-      priceMax: '',
-      attire: '',
-      showPast: false,
-      sortBy: 'nearest',
-    });
-  };
+  }, []);
 
-  const handleLoadMore = () => {
-    if (canLoadMore) setPage((prev) => prev + 1);
-  };
+  const handleClearFilters = useCallback(() => {
+    setFilters(createInitialFilters());
+    setPage(1);
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    if (canLoadMore) {
+      setPage((prev) => prev + 1);
+    }
+  }, [canLoadMore]);
 
   return {
-    events,
     visibleEvents,
     loading,
     error,
