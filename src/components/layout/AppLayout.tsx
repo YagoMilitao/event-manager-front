@@ -8,7 +8,7 @@ export default function AppLayout() {
       sx={{
         width: '100%',
         minHeight: '100vh',
-        bgcolor: '#fafafa',
+        bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
       }}

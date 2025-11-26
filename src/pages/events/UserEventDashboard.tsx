@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 export default function UserEventDashboard() {
   const navigate = useNavigate()
   const handleCreateEvent = () => navigate('/create-event')
-  const handleMyEvents = () => navigate('/my-eventsevents')
+  const handleMyEvents = () => navigate('/my-events')
   const handleHomePage=() => navigate('/')
   return (
     <Container sx={{ mt: 4 }}>

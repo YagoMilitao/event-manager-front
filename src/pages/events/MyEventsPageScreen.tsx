@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';        // links internos
 import {
   Container,
   Typography,
@@ -23,52 +23,31 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
 
-import { EventData } from '../../data/EventData';
-import { formatHour, formatDatePt } from '../../utils/dateTimeFormat';
-import EventBadge from '../../components/EventBadge';
+import { formatHour, formatDatePt } from '../../utils/dateTimeFormat'; // formata data/hora
+import EventBadge from '../../components/EventBadge';                  // chip bonitinho
+import { useMyEventsViewModel } from '../../viewModels/useMyEventsViewModel'; // hook de lógica
 
-interface MyEventsPageScreenProps {
-  // dados
-  events: EventData[];
-  visibleEvents: EventData[];
-  selectedEvents: EventData[];
+const MyEventsPageScreen: React.FC = () => {
+  // Puxa tudo do ViewModel (nada vem por props mais)
+  const {
+    events,
+    visibleEvents,
+    selectedEvents,
+    loading,
+    error,
+    selectedIds,
+    isAllSelected,
+    canLoadMore,
+    confirmOpen,
+    deleting,
+    handleToggleSelect,
+    handleToggleSelectAll,
+    handleOpenConfirm,
+    handleCloseConfirm,
+    handleConfirmDelete,
+    handleLoadMore,
+  } = useMyEventsViewModel();
 
-  // estados
-  loading: boolean;
-  error: string | null;
-  selectedIds: string[];
-  isAllSelected: boolean;
-  canLoadMore: boolean;
-  confirmOpen: boolean;
-  deleting: boolean;
-
-  // actions
-  handleToggleSelect: (id: string) => void;
-  handleToggleSelectAll: () => void;
-  handleOpenConfirm: () => void;
-  handleCloseConfirm: () => void;
-  handleConfirmDelete: () => void;
-  handleLoadMore: () => void;
-}
-
-const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
-  events,
-  visibleEvents,
-  selectedEvents,
-  loading,
-  error,
-  selectedIds,
-  isAllSelected,
-  canLoadMore,
-  confirmOpen,
-  deleting,
-  handleToggleSelect,
-  handleToggleSelectAll,
-  handleOpenConfirm,
-  handleCloseConfirm,
-  handleConfirmDelete,
-  handleLoadMore,
-}) => {
   // 👉 loading state
   if (loading) {
     return (
@@ -127,7 +106,6 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           {events.length > 0 && (
-            console.log("events.length",events.length),
             <>
               <EventBadge
                 icon={<SelectAllIcon fontSize="small" />}
@@ -136,7 +114,7 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
                 clickable
                 onClick={handleToggleSelectAll}
               />
-              
+
               <EventBadge
                 icon={<DeleteOutlineIcon fontSize="small" />}
                 label={
@@ -164,12 +142,12 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
       ) : (
         <Grid container spacing={3}>
           {visibleEvents.map((event) => {
-            const isSelected = selectedIds.includes(event._id);
-            const dateLabel = formatDatePt(event.data as unknown as string);
-            const horaInicioLabel = formatHour(event.horaInicio as any);
-            const horaFimLabel = formatHour(event.horaFim as any);
+            const isSelected = selectedIds.includes(event._id);  // se está marcado
+            const dateLabel = formatDatePt(event.data as unknown as string); // formata data
+            const horaInicioLabel = formatHour(event.horaInicio as any);    // hora início
+            const horaFimLabel = formatHour(event.horaFim as any);          // hora fim
 
-            let timeRangeLabel = '';
+            let timeRangeLabel = '';                                        // intervalo de hora
             if (horaInicioLabel && horaFimLabel) {
               timeRangeLabel = `${horaInicioLabel} - ${horaFimLabel}`;
             } else if (horaInicioLabel) {
@@ -179,17 +157,18 @@ const MyEventsPageScreen: React.FC<MyEventsPageScreenProps> = ({
             return (
               <Grid item xs={12} sm={6} md={4} key={event._id}>
                 <Card
-                  sx={{
+                  sx={(theme) => ({
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     position: 'relative',
                     border: isSelected
-                      ? '2px dashed #f44336'
-                      : '1px solid #e0e0e0',
+                      ? `2px dashed ${theme.palette.error.main}`
+                      : `1px solid ${theme.palette.divider}`,
                     opacity: isSelected ? 0.5 : 1,
+                    backgroundColor: theme.palette.background.paper,
                     transition: 'all 0.2s ease',
-                  }}
+                  })}
                 >
                   {/* Checkbox no topo esquerdo */}
                   <Box

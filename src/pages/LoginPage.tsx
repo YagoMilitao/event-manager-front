@@ -50,11 +50,11 @@ export default function LoginPage() {
       </form>
       <Button variant="outlined" 
         onClick={handleRegister} 
-        sx={{ mt: 2 }}> Register</Button>
+        sx={{ mt: 2, mr: 2 }}> Register</Button>
       <Button 
         variant="outlined" 
         onClick={handleMain} 
-        sx={{ mt: 2 }}
+        sx={{ mt: 2, ml: 2 }}
       >
         Home
       </Button>

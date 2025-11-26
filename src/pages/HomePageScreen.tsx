@@ -15,8 +15,6 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
-
-import LoginLogoutButtons from '../components/LoginLogoutButtons';
 import EventListSkeleton from '../components/skeletons/EventListSkeleton';
 import { formatDatePt, formatHour } from '../utils/dateTimeFormat';
 import { useHomePageViewModel } from '../viewModels/useHomePageViewModel';
@@ -25,6 +23,7 @@ const HomePageScreen: React.FC = () => {
   const {
     visibleEvents,
     loading,
+    loadingMore,
     error,
     filters,
     canLoadMore,
@@ -45,7 +44,7 @@ const HomePageScreen: React.FC = () => {
         sx={{
           width: '100%',
           minHeight: '100vh',
-          bgcolor: '#fafafa',
+          bgcolor: 'background.paper',
           py: 4,
         }}
       >
@@ -55,7 +54,6 @@ const HomePageScreen: React.FC = () => {
           </Typography>
           <EventListSkeleton rows={6} showActions={true} />
           <Box sx={{ mt: 4 }}>
-            <LoginLogoutButtons />
           </Box>
         </Container>
       </Box>
@@ -68,7 +66,7 @@ const HomePageScreen: React.FC = () => {
         sx={{
           width: '100%',
           minHeight: '100vh',
-          bgcolor: '#fafafa',
+          bgcolor: 'background.paper',
           py: 4,
         }}
       >
@@ -96,7 +94,7 @@ const HomePageScreen: React.FC = () => {
       sx={{
         width: '100%',
         minHeight: '100vh',
-        bgcolor: '#fafafa',
+        bgcolor: 'background.paper',
         py: 4,
       }}
     >
@@ -277,9 +275,9 @@ const HomePageScreen: React.FC = () => {
                 <ListItem
                   key={event._id}
                   sx={{
-                    backgroundColor: isPast ? '#f4f4f4' : '#fff',
+                    bgcolor: isPast ? 'action.hover' : 'background.paper',
                     color: isPast ? '#888' : 'inherit',
-                    borderBottom: '1px solid #e0e0e0',
+                    borderBottom: (theme) =>`1px solid ${theme.palette.divider}`,
                     display: 'flex',
                     flexWrap: 'wrap',
                   }}
@@ -308,14 +306,17 @@ const HomePageScreen: React.FC = () => {
 
         {canLoadMore && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-            <Button variant="outlined" onClick={handleLoadMore}>
-              Carregar mais
+            <Button
+              variant="outlined"
+              onClick={handleLoadMore}
+              disabled={loadingMore} // evita duplo clique
+            >
+              {loadingMore ? 'Carregando...' : 'Carregar mais'}
             </Button>
           </Box>
         )}
 
         <Box sx={{ mt: 4 }}>
-          <LoginLogoutButtons />
         </Box>
       </Container>
     </Box>

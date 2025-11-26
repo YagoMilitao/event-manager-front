@@ -15,5 +15,8 @@ export default function ProtectedRoute({ children }: Props) {
   }
 
   // Se estiver logado, permite acessar a rota protegida
-  return <>{children}</>
+  return 
+    <>
+      {children}
+    </>
 }

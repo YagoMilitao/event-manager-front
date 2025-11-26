@@ -7,10 +7,10 @@ import { JSX } from 'react/jsx-runtime';
 import EventDetailsPage from '../pages/events/EventDetailsPage';
 import UserEventDashboard from '../pages/events/UserEventDashboard';
 import RegisterPage from '../pages/Logon/RegisterPage';
-import MyEventsPage from '../pages/events/MyEventsPage';
 import CreateEventPageScreen from '../pages/CreateEventPage/CreateEventPageSceen';
 import EditEventPageScreen from '../pages/EditEventPage/EditEventPageScreen';
 import AppLayout from '../components/layout/AppLayout';
+import MyEventsPageScreen from '../pages/events/MyEventsPageScreen';
 
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -54,7 +54,7 @@ export default function RouterApp() {
             path="/my-events"
             element={
             <PrivateRoute>
-              <MyEventsPage />
+              <MyEventsPageScreen />
             </PrivateRoute>
             }
           />
