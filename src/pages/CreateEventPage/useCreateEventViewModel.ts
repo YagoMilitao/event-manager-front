@@ -114,6 +114,10 @@ export function useCreateEventViewModel() {
     }));
   };
 
+  const handleSaveClick = async () => {
+    await handleSubmit();
+  };
+
   const handleSubmit = async (): Promise<boolean> => {
     if (!token) {
       toast.error('Você precisa estar logado para criar um evento');
@@ -262,5 +266,6 @@ export function useCreateEventViewModel() {
     handleAddOrganizer,
     handleRemoveOrganizer,
     handleSubmit,
+    handleSaveClick,
   };
 }

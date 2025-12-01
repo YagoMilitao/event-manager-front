@@ -1,35 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-/*
-interface AuthState {
-  token: string | null;
-  user: any | null;
-}
-
-const initialState: AuthState = {
-  token: null,
-  user: null,
-};
-
-export const authSlice = createSlice({
-  name: 'auth',
-  initialState,
-  reducers: {
-    setCredentials: (state, action: PayloadAction<{ token: string; user: any }>) => {
-      state.token = action.payload.token;
-      state.user = action.payload.user;
-    },
-    logout: (state) => {
-      state.token = null;
-      state.user = null;
-    },
-  },
-});
-
-export const { setCredentials, logout } = authSlice.actions;
-export default authSlice.reducer; */
-
-
+// Estado inicial: começa sem token
 interface AuthState {
   token: string | null;
 }
@@ -42,14 +13,20 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setToken: (state, action: PayloadAction<string>) => {
+    // Salva o token no Redux
+    setToken(state, action: PayloadAction<string>) {
       state.token = action.payload;
     },
-    clearToken: (state) => {
+
+    // Limpa o token (logout)
+    clearToken(state) {
       state.token = null;
     },
   },
 });
 
+// Export das actions para usar com dispatch()
 export const { setToken, clearToken } = authSlice.actions;
+
+// Export do reducer para o store
 export default authSlice.reducer;

@@ -18,6 +18,7 @@ import {
 import EventListSkeleton from '../components/skeletons/EventListSkeleton';
 import { formatDatePt, formatHour } from '../utils/dateTimeFormat';
 import { useHomePageViewModel } from '../viewModels/useHomePageViewModel';
+import EventTable from '../components/EventTable';
 
 const HomePageScreen: React.FC = () => {
   const {
@@ -39,26 +40,26 @@ const HomePageScreen: React.FC = () => {
   } = useHomePageViewModel();
 
   if (loading) {
-    return (
-      <Box
-        sx={{
-          width: '100%',
-          minHeight: '100vh',
-          bgcolor: 'background.paper',
-          py: 4,
-        }}
+  return (
+    <Container sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Eventos
+      </Typography>
+
+      {/* Skeleton enquanto busca os eventos */}
+      <EventListSkeleton rows={6} showActions={true} />
+
+      {/* Texto indicando que está carregando (sabendo que o backend é lento mesmo) */}
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ mt: 2 }}
       >
-        <Container maxWidth="md">
-          <Typography variant="h4" gutterBottom>
-            Eventos
-          </Typography>
-          <EventListSkeleton rows={6} showActions={true} />
-          <Box sx={{ mt: 4 }}>
-          </Box>
-        </Container>
-      </Box>
-    );
-  }
+        Carregando eventos, isso pode levar alguns segundos...
+      </Typography>
+    </Container>
+  );
+}
 
   if (error) {
     return (
@@ -86,8 +87,6 @@ const HomePageScreen: React.FC = () => {
       </Box>
     );
   }
-
-  const today = new Date();
 
   return (
     <Box
@@ -245,63 +244,13 @@ const HomePageScreen: React.FC = () => {
             Nenhum evento encontrado com esses filtros.
           </Typography>
         ) : (
-          <List>
-            {visibleEvents.map((event) => {
-              const eventDate = event.data ? new Date(event.data) : today;
-              const isPast = eventDate < today;
-
-              const dateLabel = formatDatePt(event.data);
-              const horaInicioLabel = formatHour(event.horaInicio);
-              const horaFimLabel = formatHour(event.horaFim);
-
-              let timeRangeLabel = '';
-              if (horaInicioLabel && horaFimLabel) {
-                timeRangeLabel = `${horaInicioLabel} - ${horaFimLabel}`;
-              } else if (horaInicioLabel) {
-                timeRangeLabel = horaInicioLabel;
-              }
-
-              const secondaryText = [
-                dateLabel || null,
-                timeRangeLabel ? `às ${timeRangeLabel}` : null,
-                event.local || null,
-                event.traje ? `Traje: ${event.traje}` : null,
-                event.preco ? `Preço: ${event.preco}` : null,
-              ]
-                .filter(Boolean)
-                .join(' • ');
-
-              return (
-                <ListItem
-                  key={event._id}
-                  sx={{
-                    bgcolor: isPast ? 'action.hover' : 'background.paper',
-                    color: isPast ? '#888' : 'inherit',
-                    borderBottom: (theme) =>`1px solid ${theme.palette.divider}`,
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                  }}
-                  secondaryAction={
-                    !isPast && (
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        component={RouterLink}
-                        to={`/api/events/${event._id}`}
-                      >
-                        Ver detalhes
-                      </Button>
-                    )
-                  }
-                >
-                  <ListItemText
-                    primary={event.titulo}
-                    secondary={secondaryText}
-                  />
-                </ListItem>
-              );
-            })}
-          </List>
+          <Box sx={{ mt: 2 }}>
+            <EventTable
+              events={visibleEvents}                      // lista filtrada/paginada que você já tem
+              showSelection={false}                      // na home não mostra checkbox
+              detailsLinkBasePath="/api/events"          // rota base que você já usa
+            />
+          </Box>
         )}
 
         {canLoadMore && (
@@ -309,7 +258,7 @@ const HomePageScreen: React.FC = () => {
             <Button
               variant="outlined"
               onClick={handleLoadMore}
-              disabled={loadingMore} // evita duplo clique
+              disabled={loadingMore}                // desabilita enquanto estiver carregando próxima página
             >
               {loadingMore ? 'Carregando...' : 'Carregar mais'}
             </Button>

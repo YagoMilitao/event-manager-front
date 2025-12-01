@@ -25,6 +25,7 @@ interface EditEventViewModel {
   handleAddOrganizer: () => void;
   handleRemoveOrganizer: (index: number) => void;
   handleSubmit: () => Promise<void>;
+  handleUpdateClick: () => void;
 }
 
 const emptyOrganizer: Organizer = {
@@ -176,7 +177,7 @@ export function useEditEventViewModel(): EditEventViewModel {
     });
   };
 
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
   if (!id) {
     toast.error('ID do evento inválido.');
     return;
@@ -241,7 +242,11 @@ const handleSubmit = async () => {
   } finally {
     setSaving(false);
   }
-};
+  };
+
+  const handleUpdateClick = () => {
+     handleSubmit();
+  };
 
 
   return {
@@ -255,5 +260,6 @@ const handleSubmit = async () => {
     handleAddOrganizer,
     handleRemoveOrganizer,
     handleSubmit,
+    handleUpdateClick
   };
 }

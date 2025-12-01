@@ -13,16 +13,14 @@ export default function EditEventPageScreen() {
     handleOrganizerChange,
     handleAddOrganizer,
     handleRemoveOrganizer,
-    handleSubmit,
+    handleUpdateClick,
   } = useEditEventViewModel();
 
   if (loading) {
     return <EventFormSkeleton />;
   }
 
-  const handleUpdateClick = () => {
-     handleSubmit();
-  };
+  
 
   return (
     <EventForm

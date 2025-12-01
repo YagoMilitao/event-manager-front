@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import EventForm from '../../components/EventForm';
 import EventFormSkeleton from '../../components/skeletons/EventFormSkeleton';
-import { useCreateEventViewModel } from './CreateEventViewModel';
+import { useCreateEventViewModel } from './useCreateEventViewModel';
 
 export default function CreateEventPageScreen() {
   const {
@@ -14,7 +14,7 @@ export default function CreateEventPageScreen() {
     handleOrganizerChange,
     handleAddOrganizer,
     handleRemoveOrganizer,
-    handleSubmit,
+    handleSaveClick,
   } = useCreateEventViewModel();
 
   const [loading, setLoading] = useState(true);
@@ -41,9 +41,7 @@ export default function CreateEventPageScreen() {
     return <EventFormSkeleton />;
   }
 
-  const handleSaveClick = async () => {
-    await handleSubmit();
-  };
+  
 
   return (
     <EventForm

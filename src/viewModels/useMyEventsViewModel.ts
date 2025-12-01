@@ -1,79 +1,89 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {                      // importa hooks do React
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
+import {                                            // importa hooks do React
+  useEffect,                                       // efeito colateral (carregar dados ao montar)
+  useState,                                        // estado local
+  useCallback,                                     // memorizar funções
+  useMemo,                                         // memorizar valores derivados
 } from 'react';
-import { useNavigate } from 'react-router-dom';  // pra redirecionar
-import { useSelector } from 'react-redux';       // pra pegar o token do Redux
-import api from '../api/api';                    // axios configurado
-import { EventData } from '../data/EventData';   // tipo dos eventos
-import { RootState } from '../store/store';      // tipo do estado global
-import { toast } from 'react-toastify';          // toasts bonitinhos
+import { useNavigate } from 'react-router-dom';    // navegação entre rotas
+import { useSelector } from 'react-redux';         // ler estado do Redux
+import { auth } from '../firebase';                // auth do Firebase (para logout)
+import api from '../api/api';                      // cliente HTTP configurado
+import { EventData } from '../data/EventData';     // tipo de evento
+import { RootState } from '../store/store';        // tipo do root state do Redux
+import { toast } from 'react-toastify';            // toasts de feedback visual
 
-// Interface que descreve tudo que a View (MyEventsPageScreen) vai usar
-export interface MyEventsViewModel {
-  events: EventData[];            // todos os eventos do usuário
-  visibleEvents: EventData[];     // eventos da página atual (paginação)
-  selectedEvents: EventData[];    // eventos selecionados (checkbox)
-  loading: boolean;               // se está carregando
-  error: string | null;           // mensagem de erro (se tiver)
+// Quantos eventos por "página" na tabela de Meus Eventos
+const PAGE_SIZE = 10;                              // define o tamanho da página de eventos
 
-  selectedIds: string[];          // ids selecionados
-  isAllSelected: boolean;         // se todos da página estão selecionados
-  canLoadMore: boolean;           // se dá pra carregar mais páginas
-  confirmOpen: boolean;           // se o modal de confirmação está aberto
-  deleting: boolean;              // se está deletando agora
+// Interface que vamos retornar pro MyEventsPageScreen
+interface MyEventsViewModel {
+  // dados
+  events: EventData[];                             // TODOS os eventos do usuário
+  visibleEvents: EventData[];                      // apenas os eventos da página atual (para tabela)
+  selectedEvents: EventData[];                     // lista completa dos eventos selecionados
 
-  handleToggleSelect: (id: string) => void;  // seleciona/deseleciona 1 evento
-  handleToggleSelectAll: () => void;         // seleciona/deseleciona todos
-  handleOpenConfirm: () => void;             // abre modal de confirmação
-  handleCloseConfirm: () => void;            // fecha modal de confirmação
-  handleConfirmDelete: () => Promise<void>;  // confirma exclusão
-  handleLoadMore: () => void;                // aumenta a página (paginação)
+  // estados visuais
+  loading: boolean;                                // indica se está carregando dados
+  error: string | null;                            // mensagem de erro (se houver)
+  selectedIds: string[];                           // lista de IDs selecionados
+  isAllSelected: boolean;                          // true se todos os visíveis estão selecionados
+  canLoadMore: boolean;                            // true se ainda há mais eventos pra mostrar
+  confirmOpen: boolean;                            // controla abertura do modal de confirmação
+  deleting: boolean;                               // indica se está deletando no momento
+
+  // actions usadas pela tela
+  handleToggleSelect: (id: string) => void;        // marca/desmarca UM evento
+  handleToggleSelectAll: () => void;               // marca/desmarca TODOS os visíveis
+  handleOpenConfirm: () => void;                   // abre modal de confirmação
+  handleCloseConfirm: () => void;                  // fecha modal de confirmação
+  handleConfirmDelete: () => Promise<void>;        // confirma exclusão dos selecionados
+  handleLoadMore: () => void;                      // aumenta a página (mostra mais eventos)
 }
 
-// Hook que concentra toda a lógica da tela "Meus eventos"
 export const useMyEventsViewModel = (): MyEventsViewModel => {
-  const [events, setEvents] = useState<EventData[]>([]);  // lista completa
-  const [loading, setLoading] = useState(true);           // estado de loading
-  const [error, setError] = useState<string | null>(null); // estado de erro
+  // =============== ESTADOS BÁSICOS ===============
 
-  // estados da UI
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // ids marcados
-  const [confirmOpen, setConfirmOpen] = useState(false);        // modal aberto?
-  const [deleting, setDeleting] = useState(false);              // deletando?
-  const [page, setPage] = useState(1);                          // página atual
-  const PAGE_SIZE = 6;                                          // eventos por página
+  const [events, setEvents] = useState<EventData[]>([]);   // guarda TODOS os eventos do usuário
+  const [loading, setLoading] = useState(true);            // indica se está carregando
+  const [error, setError] = useState<string | null>(null); // mensagem de erro
 
-  const navigate = useNavigate();                               // pra redirecionar
-  const token = useSelector((state: RootState) => state.auth.token); // pega token do Redux
+  const [page, setPage] = useState(1);                     // página atual de exibição (client-side)
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // ids de eventos selecionados
 
-  // Busca os eventos do usuário logado
+  const [confirmOpen, setConfirmOpen] = useState(false);   // controle do modal de confirmação
+  const [deleting, setDeleting] = useState(false);         // indica se está apagando eventos agora
+
+  const navigate = useNavigate();                          // hook de navegação
+  const token = useSelector((state: RootState) => state.auth.token); // lê token do Redux
+
+  // =============== CARREGAR MEUS EVENTOS ===============
+
   const fetchMyEvents = useCallback(async () => {
-    if (!token) {                                              // se não tem token
+    // se não tiver token, manda logar e aborta
+    if (!token) {
       setError('Você precisa estar logado para ver seus eventos.'); // seta erro
-      setLoading(false);                                       // tira loading
-      setTimeout(() => navigate('/login'), 1500);              // manda pro login depois de 1.5s
-      return;                                                  // sai da função
+      setLoading(false);                                            // para loading
+      setTimeout(() => navigate('/login'), 1500);                   // redireciona para login
+      return;
     }
 
     try {
-      setLoading(true);                                        // começa loading
-      setError(null);                                          // limpa erro
+      setLoading(true);                                             // começa loading
+      setError(null);                                               // limpa erro anterior
 
       console.log('📥 Buscando meus eventos em /api/events/my-event ...');
-      const response = await api.get('/api/events/my-event', { // chama API protegida
+
+      const response = await api.get('/api/events/my-event', {      // chama backend
         headers: {
-          Authorization: `Bearer ${token}`,                    // manda token no header
+          Authorization: `Bearer ${token}`,                         // envia token JWT
         },
       });
 
       console.log('✅ Meus eventos carregados:', response.data);
-      setEvents(response.data);                                // joga eventos no state
-      setPage(1);                                              // sempre volta pra página 1 ao recarregar
-      setSelectedIds([]);                                      // limpa seleção
+      setEvents(response.data as EventData[]);                      // salva eventos no estado
+      setPage(1);                                                   // reseta página pra primeira
+      setSelectedIds([]);                                           // limpa seleção
     } catch (err: any) {
       console.error(
         '🔥 Erro ao buscar meus eventos:',
@@ -83,114 +93,111 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
       const msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
-        'Erro ao carregar seus eventos. Tente novamente.';      // mensagem fallback
+        'Erro ao carregar seus eventos. Tente novamente.';          // mensagem amigável
 
-      setError(msg);                                           // seta erro
-      toast.error(msg);                                        // mostra toast de erro
+      setError(msg);                                               // salva mensagem de erro
+      toast.error(msg);                                            // mostra toast
     } finally {
-      setLoading(false);                                       // sempre tira loading
+      setLoading(false);                                           // encerra loading
     }
-  }, [token, navigate]);                                       // depende de token e navigate
+  }, [token, navigate]);
 
-  // roda uma vez (e sempre que token mudar) pra buscar os eventos
+  // chama fetchMyEvents ao montar o hook ou quando token mudar
   useEffect(() => {
-    fetchMyEvents();                                           // chama a função de buscar eventos
-  }, [fetchMyEvents]);                                         // depende do callback
+    fetchMyEvents();                                               // dispara busca inicial
+  }, [fetchMyEvents]);
 
-  // Lista de todos os ids (pra seleção total)
-  const allIds = useMemo(
-    () => events.map((e) => e._id),                            // pega só o _id de cada evento
-    [events],                                                  // recalcula quando events mudar
-  );
+  // =============== DERIVADOS: visibleEvents, canLoadMore, etc ===============
 
-  // Ordena os eventos por data (mais próximos primeiro)
-  const sortedEvents = useMemo(
-    () =>
-      [...events].sort((a, b) => {                             // faz cópia do array e ordena
-        const da = a.data ? new Date(a.data) : new Date();     // data do evento A
-        const db = b.data ? new Date(b.data) : new Date();     // data do evento B
-        return da.getTime() - db.getTime();                    // ascendente
-      }),
-    [events],                                                  // recalcula quando events mudar
-  );
+  const visibleEvents = useMemo(() => {
+    // fatia os eventos até a página atual (client-side pagination)
+    // garante SEMPRE um array (mesmo se events estiver vazio)
+    return events.slice(0, page * PAGE_SIZE);
+  }, [events, page]);
 
-  // Eventos visíveis na página atual (paginação simples)
-  const visibleEvents = useMemo(
-    () => sortedEvents.slice(0, page * PAGE_SIZE),             // pega até page * PAGE_SIZE
-    [sortedEvents, page],                                      // depende da lista ordenada e da página
-  );
+  const canLoadMore = useMemo(() => {
+    // se o número de visíveis for menor que o total, ainda dá pra carregar mais
+    return visibleEvents.length < events.length;
+  }, [visibleEvents.length, events.length]);
 
-  // Se ainda tem mais eventos pra carregar
-  const canLoadMore = useMemo(
-    () => visibleEvents.length < sortedEvents.length,          // true se ainda tem mais
-    [visibleEvents.length, sortedEvents.length],               // depende dos tamanhos
-  );
+  const selectedEvents = useMemo(() => {
+    // lista detalhada dos eventos selecionados (pra exibir no modal de confirmação)
+    return events.filter((e) => selectedIds.includes(e._id));
+  }, [events, selectedIds]);
 
-  // Eventos selecionados (baseado em selectedIds)
-  const selectedEvents = useMemo(
-    () => events.filter((e) => selectedIds.includes(e._id)),   // mantém só os que estão em selectedIds
-    [events, selectedIds],                                     // recalcula quando mudar
-  );
-
-  // Se todos os eventos estão selecionados
-  const isAllSelected = useMemo(
-    () => allIds.length > 0 && selectedIds.length === allIds.length, // true se tudo marcado
-    [allIds.length, selectedIds.length],                             // depende dos tamanhos
-  );
-
-  // Alterna seleção de um único evento
-  const handleToggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id)                                            // se já estava selecionado
-        ? prev.filter((item) => item !== id)                       // remove
-        : [...prev, id],                                           // senão, adiciona
+  const isAllSelected = useMemo(() => {
+    // true se TODOS os eventos visíveis estão na lista de selecionados
+    return (
+      visibleEvents.length > 0 &&
+      selectedIds.length === visibleEvents.length
     );
-  }, []);
+  }, [visibleEvents.length, selectedIds.length]);
 
-  // Seleciona ou limpa seleção de todos os eventos visíveis
+  // =============== AÇÕES DE SELEÇÃO ===============
+
+  const handleToggleSelect = useCallback(
+    (id: string) => {
+      // alterna a presença do ID dentro de selectedIds
+      setSelectedIds((prev) =>
+        prev.includes(id)                             // se já estiver selecionado...
+          ? prev.filter((x) => x !== id)             // remove da lista
+          : [...prev, id],                           // senão, adiciona
+      );
+    },
+    [],
+  );
+
   const handleToggleSelectAll = useCallback(() => {
-    setSelectedIds((prev) =>
-      prev.length === allIds.length ? [] : allIds,               // se já tinha tudo -> limpa; senão -> marca tudo
-    );
-  }, [allIds]);
+    // se já estiver tudo selecionado, limpamos a seleção
+    if (isAllSelected) {
+      setSelectedIds([]);                            // limpa tudo
+      return;
+    }
 
-  // Abre o modal de confirmação (se tiver algo selecionado)
+    // se não estiver tudo selecionado, seleciona TODOS os visíveis
+    const ids = visibleEvents.map((e) => e._id);     // pega apenas os IDs
+    setSelectedIds(ids);                             // registra na seleção
+  }, [isAllSelected, visibleEvents]);
+
+  // =============== CONTROLE DO MODAL DE CONFIRMAÇÃO ===============
+
   const handleOpenConfirm = useCallback(() => {
-    if (!selectedIds.length) return;                             // não faz nada se não tiver seleção
-    setConfirmOpen(true);                                        // abre modal
+    // só abre modal se tiver pelo menos 1 selecionado
+    if (selectedIds.length === 0) {
+      toast.info('Selecione pelo menos um evento para excluir.');
+      return;
+    }
+    setConfirmOpen(true);                            // abre modal
   }, [selectedIds.length]);
 
-  // Fecha o modal de confirmação (se não estiver deletando)
   const handleCloseConfirm = useCallback(() => {
-    if (deleting) return;                                        // se estiver deletando, não deixa fechar
-    setConfirmOpen(false);                                       // fecha modal
-  }, [deleting]);
+    setConfirmOpen(false);                           // fecha modal
+  }, []);
 
-  // Carrega mais eventos (aumenta a página)
-  const handleLoadMore = useCallback(() => {
-    if (!canLoadMore) return;                                    // se não tiver mais, não faz nada
-    setPage((prev) => prev + 1);                                 // incrementa a página
-  }, [canLoadMore]);
+  // =============== EXCLUSÃO DE EVENTOS SELECIONADOS ===============
 
-  // Confirma exclusão dos eventos selecionados
   const handleConfirmDelete = useCallback(async () => {
-    if (!selectedIds.length) return;                             // se nada selecionado, sai
-    if (!token) {                                                // se não tiver token
-      toast.error('Você precisa estar logado para excluir eventos.'); // avisa
-      navigate('/login');                                        // redireciona
+    // se não tiver nada selecionado, não faz nada
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    if (!token) {
+      toast.error('Você precisa estar logado para excluir eventos.');
+      navigate('/login');
       return;
     }
 
     try {
-      setDeleting(true);                                         // começa estado de deletando
+      setDeleting(true);                             // marca que estamos excluindo
       console.log('🗑️ Deletando eventos (frontend):', selectedIds);
 
-      // dispara delete pra cada id selecionado
+      // dispara as chamadas de deleção em paralelo
       await Promise.all(
         selectedIds.map((id) =>
           api.delete(`/api/events/${id}`, {
             headers: {
-              Authorization: `Bearer ${token}`,                  // manda token
+              Authorization: `Bearer ${token}`,      // manda token JWT pro backend
             },
           }),
         ),
@@ -198,14 +205,14 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
 
       console.log('✅ Eventos deletados com sucesso:', selectedIds);
 
-      // Remove do estado local tudo que foi deletado
+      // remove os eventos deletados da lista local
       setEvents((prev) => prev.filter((e) => !selectedIds.includes(e._id)));
 
       // limpa seleção e fecha modal
       setSelectedIds([]);
       setConfirmOpen(false);
 
-      // toast de sucesso
+      // feedback pro usuário
       toast.success(
         selectedIds.length === 1
           ? 'Evento excluído com sucesso!'
@@ -221,17 +228,31 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         'Erro ao excluir eventos. Tente novamente.';
-      toast.error(msg);                                         // mostra toast de erro
+
+      toast.error(msg);
     } finally {
-      setDeleting(false);                                       // sempre tira o estado de deletando
+      setDeleting(false);                            // encerra estado de deleção
     }
   }, [selectedIds, token, navigate]);
 
-  // Retorna tudo que a tela precisa
+  // =============== PAGINAÇÃO (CARREGAR MAIS) ===============
+
+  const handleLoadMore = useCallback(() => {
+    // só aumenta a página se ainda houver mais eventos
+    if (canLoadMore) {
+      setPage((prev) => prev + 1);                   // incrementa página
+    }
+  }, [canLoadMore]);
+
+  // =============== RETORNO PARA A TELA ===============
+
   return {
-    events,
-    visibleEvents,
-    selectedEvents,
+    // dados
+    events,                                          // todos os eventos brutos
+    visibleEvents,                                   // eventos exibidos na página atual
+    selectedEvents,                                  // lista detalhada dos selecionados
+
+    // estados
     loading,
     error,
     selectedIds,
@@ -239,6 +260,8 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
     canLoadMore,
     confirmOpen,
     deleting,
+
+    // ações
     handleToggleSelect,
     handleToggleSelectAll,
     handleOpenConfirm,

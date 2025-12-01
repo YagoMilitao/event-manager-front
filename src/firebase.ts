@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { browserLocalPersistence, browserSessionPersistence, getAuth, GoogleAuthProvider, setPersistence, TwitterAuthProvider  } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -10,6 +10,31 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-const app = initializeApp(firebaseConfig)
+// 🔥 Inicializa o app Firebase do FRONT (React)
+const app = initializeApp(firebaseConfig);      // Cria a instância do app client-side
 
-export const auth = getAuth(app)
+// 🔐 Pega o "auth" usado no front (login, logout, etc)
+export const auth = getAuth(app);               // Hook principal para Auth no cliente
+
+// Função helper pra configurar persistence baseado em "lembrar login"
+export async function setAuthPersistence(remember: boolean) {
+  await setPersistence(
+    auth,
+    remember ? browserLocalPersistence : browserSessionPersistence
+  );
+}
+
+// 🟢 Provider do Google — é ele que o signInWithPopup usa
+export const googleProvider = new GoogleAuthProvider(); // Configura o provider Google
+
+// (Opcional) sempre mostrar seleção de conta, mesmo se já logado no navegador
+googleProvider.setCustomParameters({
+  prompt: 'select_account',                     // Força mostrar as contas sempre
+});
+
+export const twitterProvider = new TwitterAuthProvider();
+// Você pode opcionalmente pedir email:
+twitterProvider.setCustomParameters({
+  lang: 'pt',          // interface em pt
+  // 'force_login': 'true' // se quiser SEMPRE forçar escolher conta
+});

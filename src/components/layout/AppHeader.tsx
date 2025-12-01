@@ -37,6 +37,12 @@ export default function AppHeader() {
 
   const handleGoHome = () => navigate('/');
 
+  const handleOpenLoginModal = () => {
+    navigate('/login', {
+      state: { backgroundLocation: location },  // guarda a rota atual como "fundo"
+    });
+  };
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -87,8 +93,12 @@ export default function AppHeader() {
 
           {!token && (
             <>
-              <Button color="inherit" component={RouterLink} to="/login">
+              {/* 👇 troca o Link por um onClick que abre o modal */}
+              <Button color="inherit" onClick={handleOpenLoginModal}>
                 Entrar
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/register">
+                Registrar
               </Button>
             </>
           )}
