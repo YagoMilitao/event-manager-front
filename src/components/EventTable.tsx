@@ -1,5 +1,4 @@
-// src/components/events/EventTable.tsx
-import React from 'react';                                                // React para JSX
+import React from 'react';
 import {
   Table,
   TableBody,
@@ -12,9 +11,8 @@ import {
   Button,
   Typography,
   Box,
-} from '@mui/material';                                                   // Tabela MUI
+} from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';                    // Navegação com Link
-
 import { EventData } from '../data/EventData';                         // Tipo do evento
 import { formatDatePt } from '../utils/dateTimeFormat';                // Função para formatar data
 
@@ -70,11 +68,11 @@ const EventTable: React.FC<EventTableProps> = ({
                   <TableCell padding="checkbox">
                     {onToggleSelectAll && typeof isAllSelected === 'boolean' && (
                       <Checkbox
-                        checked={isAllSelected}                    // todos selecionados?
-                        indeterminate={                            // meio marcado se alguns, mas não todos
+                        checked={isAllSelected}
+                        indeterminate={ 
                           selectedIds.length > 0 && !isAllSelected
                         }
-                        onChange={() => onToggleSelectAll()}       // marca/desmarca todos
+                        onChange={() => onToggleSelectAll()}
                       />
                     )}
                   </TableCell>
@@ -82,36 +80,34 @@ const EventTable: React.FC<EventTableProps> = ({
 
                 {/* Demais colunas fixas */}
                 <TableCell>Data</TableCell>
-                <TableCell>Nome</TableCell>
+                <TableCell>Nome do evento</TableCell>
                 <TableCell>Local</TableCell>
                 <TableCell>Traje</TableCell>
                 <TableCell>Preço</TableCell>
-                <TableCell align="right">Ações</TableCell>         {/* agora "Ações", não só Detalhes */}
+                <TableCell align="right">Ações</TableCell> 
               </TableRow>
             </TableHead>
 
             <TableBody>
               {events.map((event) => {
-                // Alguns lugares chamam "nome", outros "titulo"
                 const title =
-                  (event as any).titulo ||
-                  (event as any).nome ||
+                  event.eventName ||
                   'Sem título';
 
                 // Converte data para Date pra comparar com hoje
-                const eventDate = event.data
-                  ? new Date(event.data as unknown as string)
+                const eventDate = event.date
+                  ? new Date(event.date)
                   : today;
 
                 const isPast = eventDate < today;                  // já passou?
 
-                const dateLabel = event.data
-                  ? formatDatePt(event.data as unknown as string)
+                const dateLabel = event.date
+                  ? formatDatePt(event.date)
                   : '-';
 
                 const priceLabel =
-                  event.preco && String(event.preco).trim().length > 0
-                    ? String(event.preco)
+                  event.price && String(event.price).trim().length > 0
+                    ? String(event.price)
                     : 'Gratuito';
 
                 const isSelected = selectedIds.includes(event._id);
@@ -141,16 +137,12 @@ const EventTable: React.FC<EventTableProps> = ({
 
                     {/* Data */}
                     <TableCell>{dateLabel}</TableCell>
-
                     {/* Nome */}
                     <TableCell>{title}</TableCell>
-
                     {/* Local */}
-                    <TableCell>{event.local || '-'}</TableCell>
-
+                    <TableCell>{event.location || '-'}</TableCell>
                     {/* Traje */}
-                    <TableCell>{event.traje || '-'}</TableCell>
-
+                    <TableCell>{event.dressCode || '-'}</TableCell>
                     {/* Preço */}
                     <TableCell>{priceLabel}</TableCell>
 
@@ -163,7 +155,6 @@ const EventTable: React.FC<EventTableProps> = ({
                           gap: 1,
                         }}
                       >
-                        {/* Botão de detalhes – sempre aparece */}
                         <Button
                           variant="outlined"
                           size="small"

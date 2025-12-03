@@ -1,6 +1,6 @@
 import EventForm from '../../components/EventForm';
 import EventFormSkeleton from '../../components/skeletons/EventFormSkeleton';
-import { useEditEventViewModel } from '../../viewModels/editEventViewModel';
+import { useEditEventViewModel } from '../../viewModels/useEditEventViewModel';
 
 export default function EditEventPageScreen() {
   const {
@@ -10,6 +10,7 @@ export default function EditEventPageScreen() {
     handleChange,
     handleTimeChange,
     handleImageChange,
+    handleRemoveImage,
     handleOrganizerChange,
     handleAddOrganizer,
     handleRemoveOrganizer,
@@ -20,8 +21,6 @@ export default function EditEventPageScreen() {
     return <EventFormSkeleton />;
   }
 
-  
-
   return (
     <EventForm
       mode="edit"
@@ -30,6 +29,7 @@ export default function EditEventPageScreen() {
       onChange={handleChange}
       onTimeChange={handleTimeChange}
       onImageChange={handleImageChange}
+      onRemoveImage={handleRemoveImage}
       onOrganizerChange={handleOrganizerChange}
       onAddOrganizer={handleAddOrganizer}
       onRemoveOrganizer={handleRemoveOrganizer}

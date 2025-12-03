@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import EventForm from '../../components/EventForm';
 import EventFormSkeleton from '../../components/skeletons/EventFormSkeleton';
-import { useCreateEventViewModel } from './useCreateEventViewModel';
+import { useCreateEventViewModel } from '../../viewModels/useCreateEventViewModel';
 
 export default function CreateEventPageScreen() {
   const {
@@ -11,6 +11,7 @@ export default function CreateEventPageScreen() {
     handleChange,
     handleTimeChange,
     handleImageChange,
+    handleRemoveImage,
     handleOrganizerChange,
     handleAddOrganizer,
     handleRemoveOrganizer,
@@ -41,8 +42,6 @@ export default function CreateEventPageScreen() {
     return <EventFormSkeleton />;
   }
 
-  
-
   return (
     <EventForm
       mode="create"
@@ -51,6 +50,7 @@ export default function CreateEventPageScreen() {
       onChange={handleChange}
       onTimeChange={handleTimeChange}
       onImageChange={handleImageChange}
+      onRemoveImage={handleRemoveImage}
       onOrganizerChange={handleOrganizerChange}
       onAddOrganizer={handleAddOrganizer}
       onRemoveOrganizer={handleRemoveOrganizer}

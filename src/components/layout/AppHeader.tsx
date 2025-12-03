@@ -30,23 +30,28 @@ export default function AppHeader() {
     navigate('/login');
   };
   // Esconder o header em algumas rotas:
-  const hideHeaderOnRoutes = ['/login', '/register'];
+  /*const hideHeaderOnRoutes = ['/login', '/register'];
   if (hideHeaderOnRoutes.includes(location.pathname)) {
     return null;
-  }
+  }*/
 
   const handleGoHome = () => navigate('/');
 
   const handleOpenLoginModal = () => {
     navigate('/login', {
-      state: { backgroundLocation: location },  // guarda a rota atual como "fundo"
+      state: { backgroundLocation: location },
     });
   };
+
+  const handleOpenRegisterModal = () => {
+    navigate('/register', {
+      state: { backgroundLocation: location },
+    });
+  }
 
   return (
     <AppBar position="static">
       <Toolbar>
-        {/* Logo / Título clicável */}
         <Typography
           variant="h6"
           component="div"
@@ -56,7 +61,6 @@ export default function AppHeader() {
           Event Manager
         </Typography>
 
-        {/* Botão toggle de tema */}
         <Tooltip title={mode === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}>
           <IconButton
             color="inherit"
@@ -93,11 +97,10 @@ export default function AppHeader() {
 
           {!token && (
             <>
-              {/* 👇 troca o Link por um onClick que abre o modal */}
               <Button color="inherit" onClick={handleOpenLoginModal}>
                 Entrar
               </Button>
-              <Button color="inherit" component={RouterLink} to="/register">
+              <Button color="inherit" onClick={handleOpenRegisterModal}>
                 Registrar
               </Button>
             </>

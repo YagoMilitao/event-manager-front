@@ -1,29 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {                                            // importa hooks do React
-  useEffect,                                       // efeito colateral (carregar dados ao montar)
-  useState,                                        // estado local
-  useCallback,                                     // memorizar funções
-  useMemo,                                         // memorizar valores derivados
-} from 'react';
-import { useNavigate } from 'react-router-dom';    // navegação entre rotas
-import { useSelector } from 'react-redux';         // ler estado do Redux
-import { auth } from '../firebase';                // auth do Firebase (para logout)
-import api from '../api/api';                      // cliente HTTP configurado
-import { EventData } from '../data/EventData';     // tipo de evento
-import { RootState } from '../store/store';        // tipo do root state do Redux
-import { toast } from 'react-toastify';            // toasts de feedback visual
+import { useEffect,useState, useCallback, useMemo} from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';     
+import api from '../api/api';     
+import { EventData } from '../data/EventData';
+import { RootState } from '../store/store';
+import { toast } from 'react-toastify';
 
 // Quantos eventos por "página" na tabela de Meus Eventos
 const PAGE_SIZE = 10;                              // define o tamanho da página de eventos
 
 // Interface que vamos retornar pro MyEventsPageScreen
 interface MyEventsViewModel {
-  // dados
   events: EventData[];                             // TODOS os eventos do usuário
   visibleEvents: EventData[];                      // apenas os eventos da página atual (para tabela)
   selectedEvents: EventData[];                     // lista completa dos eventos selecionados
 
-  // estados visuais
   loading: boolean;                                // indica se está carregando dados
   error: string | null;                            // mensagem de erro (se houver)
   selectedIds: string[];                           // lista de IDs selecionados
@@ -32,7 +24,6 @@ interface MyEventsViewModel {
   confirmOpen: boolean;                            // controla abertura do modal de confirmação
   deleting: boolean;                               // indica se está deletando no momento
 
-  // actions usadas pela tela
   handleToggleSelect: (id: string) => void;        // marca/desmarca UM evento
   handleToggleSelectAll: () => void;               // marca/desmarca TODOS os visíveis
   handleOpenConfirm: () => void;                   // abre modal de confirmação
@@ -247,12 +238,9 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
   // =============== RETORNO PARA A TELA ===============
 
   return {
-    // dados
     events,                                          // todos os eventos brutos
     visibleEvents,                                   // eventos exibidos na página atual
     selectedEvents,                                  // lista detalhada dos selecionados
-
-    // estados
     loading,
     error,
     selectedIds,
@@ -260,8 +248,6 @@ export const useMyEventsViewModel = (): MyEventsViewModel => {
     canLoadMore,
     confirmOpen,
     deleting,
-
-    // ações
     handleToggleSelect,
     handleToggleSelectAll,
     handleOpenConfirm,

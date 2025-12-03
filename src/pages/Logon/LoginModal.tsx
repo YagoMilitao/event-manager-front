@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
-import LoginPage from '../../pages/LoginPageScreen';
+import LoginPage from '../LoginPageScreen';
 
 const LoginModal: React.FC = () => {
   const navigate = useNavigate();

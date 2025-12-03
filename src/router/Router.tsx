@@ -12,7 +12,7 @@ import MyEventsPage from '../pages/events/MyEventsPageScreen';
 import CreateEventPageScreen from '../pages/CreateEventPage/CreateEventPageSceen';
 import EditEventPageScreen from '../pages/EditEventPage/EditEventPageScreen';
 import AppLayout from '../components/layout/AppLayout';
-import LoginModal from '../components/auth/LoginModal'; // 👈 novo componente (vamos criar já já)
+import LoginModal from '../pages/Logon/LoginModal'; // 👈 novo componente (vamos criar já já)
 
 // PrivateRoute continua igual
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -91,7 +91,6 @@ function AppRoutesWithModals() {
   );
 }
 
-// Componente principal que envolve tudo no BrowserRouter
 export default function RouterApp() {
   return (
     <BrowserRouter>

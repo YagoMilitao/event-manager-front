@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';                               // React + hooks de estado
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   Box,
@@ -10,42 +11,37 @@ import {
   Checkbox,
   FormControlLabel,
 } from '@mui/material';                                                
-import GoogleIcon from '@mui/icons-material/Google';                   
-import { useNavigate } from 'react-router-dom';                        
-import { useDispatch } from 'react-redux';                             
-import { 
-  signInWithEmailAndPassword,                                          
-  signInWithPopup                                                      
-} from 'firebase/auth'; 
-import XIcon from '@mui/icons-material/X';                             
-import { auth, googleProvider, setAuthPersistence, twitterProvider } from '../firebase';   
-import { setToken } from '../store/authSlice';                         
-import { toast } from 'react-toastify';                                
+import GoogleIcon from '@mui/icons-material/Google';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import {
+  signInWithEmailAndPassword,
+  signInWithPopup
+} from 'firebase/auth';
+import XIcon from '@mui/icons-material/X';
+import { auth, googleProvider, setAuthPersistence, twitterProvider } from '../firebase';
+import { setToken } from '../store/authSlice';
+import { toast } from 'react-toastify';
 
 const LoginPageScreen: React.FC = () => {
-  // ---------- ESTADOS DO FORM ----------
-  const [email, setEmail] = useState('');                               // guarda o email digitado
-  const [password, setPassword] = useState('');                         // guarda a senha digitada
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberEmail, setRememberEmail] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
+  const [isLoadingTwitter, setIsLoadingTwitter] = useState(false);
 
-  // ---------- ESTADOS DE LOADING ----------
-  const [isLoading, setIsLoading] = useState(false);                    // loading do login email/senha
-  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);        // loading do login Google
-  const [isLoadingTwitter, setIsLoadingTwitter] = useState(false);      // 👈 NOVO: login Twitter
-
-  
-
-  const navigate = useNavigate();                                       // hook pra redirecionar o usuário
-  const dispatch = useDispatch();                                       // hook pra disparar actions no Redux
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     // lê do localStorage se o usuário já tinha pedido pra lembrar o e-mail
-    const savedEmail = localStorage.getItem('login_email');        // e-mail salvo (se existir)
-    const savedRemember = localStorage.getItem('login_remember');  // "true" ou "false"
+    const savedEmail = localStorage.getItem('login_email');
+    const savedRemember = localStorage.getItem('login_remember');
 
     if (savedEmail && savedRemember === 'true') {
-      setEmail(savedEmail);             // preenche o campo de e-mail
-      setRememberEmail(true);           // marca a checkbox
+      setEmail(savedEmail);
+      setRememberEmail(true);
     }
 }, []);
 
@@ -57,7 +53,7 @@ const LoginPageScreen: React.FC = () => {
     e.preventDefault();                                                 // evita reload da página
 
     try {
-      setIsLoading(true);                                               // liga spinner do botão "Entrar"
+      setIsLoading(true);
       await setAuthPersistence(rememberEmail);
 
       // Faz o login no Firebase usando email e senha
@@ -69,9 +65,9 @@ const LoginPageScreen: React.FC = () => {
       // Joga o token no Redux pra usarmos no backend (Authorization: Bearer <token>)
       dispatch(setToken(idToken));
 
-      toast.success('Login realizado com sucesso!');                    // feedback positivo
+      toast.success('Login realizado com sucesso!');
 
-      navigate('/event-dashboard');                                     // redireciona pro dashboard
+      navigate('/event-dashboard');
       // Salva ou limpa o e-mail no localStorage, conforme a checkbox
       if (rememberEmail) {
         localStorage.setItem('login_email', email);     // guarda o e-mail
@@ -81,11 +77,11 @@ const LoginPageScreen: React.FC = () => {
         localStorage.removeItem('login_remember');
       }
 
-    } catch (err: any) {
-      console.error('Erro no login:', err);                             // log no console
-      toast.error('Erro ao fazer login. Verifique seus dados.');        // mensagem pro usuário
+    } catch (err) {
+      console.error('Erro no login:', err);
+      toast.error('Erro ao fazer login. Verifique seus dados.');
     } finally {
-      setIsLoading(false);                                              // desliga o loading sempre
+      setIsLoading(false);
     }
   };
 
@@ -94,7 +90,7 @@ const LoginPageScreen: React.FC = () => {
   // =======================================================
   const handleGoogleLogin = async () => {
     try {
-      setIsLoadingGoogle(true);                                         // liga loading do botão Google
+      setIsLoadingGoogle(true);
 
       // Abre o popup do Google usando o provider googleProvider
       const result = await signInWithPopup(auth, googleProvider);
@@ -116,13 +112,13 @@ const LoginPageScreen: React.FC = () => {
     } catch (err: any) {
       console.error('Erro no login com Google:', err);
 
-      if (err?.code === 'auth/popup-closed-by-user') {                  // usuário fechou o popup
+      if (err?.code === 'auth/popup-closed-by-user') {
         toast.info('Login com Google cancelado.');
       } else {
         toast.error('Erro ao fazer login com Google.');
       }
     } finally {
-      setIsLoadingGoogle(false);                                        // desliga loading
+      setIsLoadingGoogle(false);
     }
   };
 
@@ -171,8 +167,8 @@ const LoginPageScreen: React.FC = () => {
   // =======================================================
   return (
     
-    <Container maxWidth="sm" sx={{ mt: 6 }}>                            {/* container centralizado */}
-      <Paper sx={{ p: 4 }}>                                             {/* card de fundo */}
+    <Container maxWidth="sm" sx={{ mt: 6 }}>
+      <Paper sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom align="center">
           Entrar
         </Typography>
@@ -185,7 +181,7 @@ const LoginPageScreen: React.FC = () => {
             type="email"
             margin="normal"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}                  // atualiza estado email
+            onChange={(e) => setEmail(e.target.value)}
           />
           <TextField
             fullWidth
@@ -224,9 +220,9 @@ const LoginPageScreen: React.FC = () => {
         <Button
           fullWidth
           variant="outlined"
-          startIcon={<GoogleIcon />}                                     // ícone do Google
+          startIcon={<GoogleIcon />}
           onClick={handleGoogleLogin}
-          disabled={isLoadingGoogle || isLoading || isLoadingTwitter}      // se algum loading, bloqueia
+          disabled={isLoadingGoogle || isLoading || isLoadingTwitter}
           sx={{ mb: 1 }}
         >
           {isLoadingGoogle ? 'Conectando ao Google...' : 'Entrar com Google'}

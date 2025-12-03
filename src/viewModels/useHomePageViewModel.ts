@@ -1,42 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  useCallback,          // memoizar funções (pra não recriar a cada render)
-  useEffect,            // efeitos colaterais (chamar API ao montar)
-  useMemo,              // valores derivados (filtros/ordenação)
-  useState,             // estado local do hook
+  useCallback,
+  useEffect,
+  useMemo,  
+  useState,
 } from 'react';
-import api from '../api/api';                 // cliente HTTP configurado (axios)
-import { EventData } from '../data/EventData';// tipo de evento da sua aplicação
+import api from '../api/api';
+import { EventData } from '../data/EventData';
 
-// ---- Configuração de paginação da HOME ----
-const PAGE_SIZE = 10;                         // quantos eventos por página queremos carregar
+// quantos eventos por página queremos carregar
+const PAGE_SIZE = 10;                         
 
 // Tipo dos filtros usados na Home
 type SortBy = 'nearest' | 'newest' | 'cheapest';
 
 interface HomeFilters {
-  searchText: string;                         // texto de busca (nome/descrição)
-  city: string;                               // filtro por cidade/local
-  dateFrom: string;                           // data inicial (YYYY-MM-DD)
-  dateTo: string;                             // data final (YYYY-MM-DD)
-  priceMin: string;                           // preço mínimo (string vindo do input)
-  priceMax: string;                           // preço máximo
-  attire: string;                             // traje
-  showPast: boolean;                          // se inclui eventos já passados
-  sortBy: SortBy;                             // critério de ordenação
+  searchText: string;
+  city: string;      
+  dateFrom: string;  
+  dateTo: string;    
+  priceMin: string;  
+  priceMax: string;  
+  attire: string;    
+  showPast: boolean; 
+  sortBy: SortBy;    
 }
 
-// Tipo do objeto retornado pelo hook (usado pela HomePageScreen)
 interface HomePageViewModel {
-  visibleEvents: EventData[];                 // eventos filtrados/ordenados carregados até agora
-  loading: boolean;                           // loading geral (primeiro carregamento / recarregar tudo)
-  loadingMore: boolean;                       // loading específico do "Carregar mais"
-  error: string | null;                       // mensagem de erro
-
-  filters: HomeFilters;                       // filtros atuais no estado
-  canLoadMore: boolean;                       // se ainda existem mais páginas no backend
-
-  // handlers de filtros
+  visibleEvents: EventData[];   
+  loading: boolean;             
+  loadingMore: boolean;         
+  error: string | null;         
+  filters: HomeFilters;         
+  canLoadMore: boolean;         
   handleSearchChange: (value: string) => void;
   handleCityChange: (value: string) => void;
   handleDateChange: (field: 'dateFrom' | 'dateTo', value: string) => void;
@@ -45,21 +41,18 @@ interface HomePageViewModel {
   handleShowPastChange: (value: boolean) => void;
   handleSortChange: (value: SortBy) => void;
   handleClearFilters: () => void;
-
-  // paginação
   handleLoadMore: () => void;
 }
 
 export const useHomePageViewModel = (): HomePageViewModel => {
   // ======= ESTADO BÁSICO DOS EVENTOS / PAGINAÇÃO =======
 
-  const [events, setEvents] = useState<EventData[]>([]);   // todos os eventos carregados até agora
-  const [page, setPage] = useState(1);                     // página atual carregada (começa em 1)
-  const [canLoadMore, setCanLoadMore] = useState(false);   // se backend ainda tem mais páginas
-
-  const [loading, setLoading] = useState(true);            // loading do "carregamento principal"
-  const [loadingMore, setLoadingMore] = useState(false);   // loading só do botão "Carregar mais"
-  const [error, setError] = useState<string | null>(null); // mensagem de erro geral
+  const [events, setEvents] = useState<EventData[]>([]); 
+  const [page, setPage] = useState(1);                   
+  const [canLoadMore, setCanLoadMore] = useState(false); 
+  const [loading, setLoading] = useState(true);           
+  const [loadingMore, setLoadingMore] = useState(false);  
+  const [error, setError] = useState<string | null>(null);
 
   // ======= ESTADO DOS FILTROS =======
 
@@ -137,7 +130,7 @@ export const useHomePageViewModel = (): HomePageViewModel => {
   // ======= FILTRAGEM / ORDENAÇÃO NO FRONT (EM CIMA DOS EVENTS CARREGADOS) =======
 
   const visibleEvents = useMemo(() => {
-    const today = new Date();               // data atual (pra filtro de "passados")
+    const today = new Date();
     today.setHours(0, 0, 0, 0); 
 
     // helper: normaliza strings pra comparar (minúsculo, sem espaços nas pontas)
@@ -152,8 +145,8 @@ export const useHomePageViewModel = (): HomePageViewModel => {
       return new Date(year, month - 1, day);
     };
 
-    const dateFrom = parseDateInput(filters.dateFrom); // data minima
-    const dateTo = parseDateInput(filters.dateTo);     // data máxima
+    const dateFrom = parseDateInput(filters.dateFrom);
+    const dateTo = parseDateInput(filters.dateTo);
 
     const minPrice = filters.priceMin
       ? Number(filters.priceMin.replace(',', '.'))
@@ -164,24 +157,24 @@ export const useHomePageViewModel = (): HomePageViewModel => {
 
     // 1) filtra
     const filtered = events.filter((event) => {
-      const title = normalize((event as any).titulo || (event as any).nome);
-      const description = normalize((event as any).descricao);
-      const city = normalize(event.local as any);
-      const attire = normalize(event.traje as any);
+      const eventName = normalize(event.eventName);
+      const description = normalize(event.description);
+      const city = normalize(event.location);
+      const attire = normalize(event.dressCode);
 
       const search = normalize(filters.searchText);
       const filterCity = normalize(filters.city);
       const filterAttire = normalize(filters.attire);
 
       // data do evento
-      const eventDate = event.data
-        ? new Date(event.data as unknown as string)
+      const eventDate = event.date
+        ? new Date(event.date)
         : null;
 
       // ----- filtro: busca por texto -----
       if (search) {
         const matchesSearch =
-          title.includes(search) || description.includes(search);
+          eventName.includes(search) || description.includes(search);
         if (!matchesSearch) return false;
       }
 
@@ -231,8 +224,8 @@ export const useHomePageViewModel = (): HomePageViewModel => {
 
     // 2) ordena
     const sorted = [...filtered].sort((a, b) => {
-      const dateA = a.data ? new Date(a.data as any) : new Date();
-      const dateB = b.data ? new Date(b.data as any) : new Date();
+      const dateA = a.date ? new Date(a.date) : new Date();
+      const dateB = b.date ? new Date(b.date) : new Date();
 
       if (filters.sortBy === 'nearest') {
         // mais próximos pela data do evento (ascendente)
@@ -334,12 +327,12 @@ export const useHomePageViewModel = (): HomePageViewModel => {
   // ======= RETORNA TUDO QUE A TELA PRECISA =======
 
   return {
-    visibleEvents,                              // eventos já filtrados e ordenados
-    loading,                                    // loading da tela toda
-    loadingMore,                                // loading do botão "Carregar mais"
-    error,                                      // mensagem de erro
-    filters,                                    // estado dos filtros
-    canLoadMore,                                // se ainda há mais páginas
+    visibleEvents,
+    loading,
+    loadingMore,
+    error,  
+    filters,
+    canLoadMore,
     handleSearchChange,
     handleCityChange,
     handleDateChange,

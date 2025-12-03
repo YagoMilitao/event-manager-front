@@ -1,23 +1,24 @@
+import { Organizer } from "./OrganizerData"
+
 export type EventData = {
-  _id: string
-  titulo: string
-  descricao: string
-  data: string
-  horaInicio: string
-  horaFim?: string
-  traje?: string
-  local: string
-  image?: string
-  preco?: string
-  organizadores?:Organizadores[]
+  _id: string;
+  eventName: string;
+  description: string;
+  date: string;
+  startTime: string;
+  endTime?: string;
+  dressCode?: string;
+  location: string;
+  image?: string;
+  price?: string;
+  coverImage?: EventImage | null;
+  images?: EventImage[];
+  organizers?: Organizer[];
  }
 
- export type Organizadores ={
-  _id: string
-  nome: string
-  email?: string
-  whatsapp?: string
-  facebook?: string
-  instagram?: string
-  twitter?: string
- }
+ 
+
+ export type EventImage = {
+  url: string;        // URL pública que o front pode usar no <img src="...">
+  filename: string;   // nome do arquivo dentro do bucket (caso precise deletar / atualizar depois)
+};

@@ -1,11 +1,11 @@
-import { useCallback } from 'react';              // Importa useCallback para memorizar funções
-import { useNavigate } from 'react-router-dom';  // Hook do react-router para navegar entre páginas
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Interface que define tudo que o view model devolve para a UI
 export interface UserEventDashboardViewModel {
-  handleGoToMyEvents: () => void;      // Função para ir para /my-events
-  handleGoToCreateEvent: () => void;   // Função para ir para /create-event
-  handleGoToHome: () => void;          // Função para ir para /
+  handleGoToMyEvents: () => void;
+  handleGoToCreateEvent: () => void;
+  handleGoToHome: () => void;
 }
 
 // Hook responsável pela "lógica" do dashboard
