@@ -1,6 +1,6 @@
 export type Organizer ={
   _id?: string
-  name: string
+  organizerName: string
   email?: string
   whatsapp?: string
   facebook?: string

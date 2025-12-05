@@ -256,7 +256,7 @@ const EventDetailsPageScreen: React.FC = () => {
 
                 return (
                   <Box key={index}>
-                    <Typography variant="subtitle1">{org.name}</Typography>
+                    <Typography variant="subtitle1">{org.organizerName}</Typography>
 
                     <Stack direction="row" spacing={1}>
                       {whatsappLink && (

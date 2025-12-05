@@ -30,7 +30,7 @@ interface EditEventViewModel {
 }
 
 const emptyOrganizer: Organizer = {
-  name: '',
+  organizerName: '',
   email: '',
   whatsapp: '',
   instagram: 'https://www.instagram.com/',
@@ -232,7 +232,7 @@ export function useEditEventViewModel(): EditEventViewModel {
 
     try {
       const sanitizedOrganizers = form.organizers.map((org) => ({
-        name: org.name,
+        organizerName: org.organizerName,
         email: org.email,
         whatsapp: org.whatsapp,
         instagram: org.instagram,

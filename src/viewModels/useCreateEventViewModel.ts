@@ -9,7 +9,7 @@ import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import { useNavigate } from 'react-router-dom';
 
 const initialOrganizer: Organizer = {
-  name: '',
+  organizerName: '',
   email: '',
   whatsapp: '',
   instagram: 'https://www.instagram.com/',
@@ -99,10 +99,10 @@ export function useCreateEventViewModel() {
     }));
   };
 
-  const handleTimeChange = (name: 'startTime' | 'endTime', value: string) => {
+  const handleTimeChange = (time: 'startTime' | 'endTime', value: string) => {
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [time]: value,
     }));
   };
 
@@ -180,7 +180,7 @@ export function useCreateEventViewModel() {
       }
 
       const cleanedOrganizers = form.organizers.filter(
-        (o) => o.name.trim().length > 0,
+        (o) => o.organizerName.trim().length > 0,
       );
 
       if (cleanedOrganizers.length === 0) {

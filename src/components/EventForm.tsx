@@ -19,7 +19,7 @@ interface EventFormProps {
   form: CreateEventForm;
   loading?: boolean;
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  onTimeChange: (name: 'horaInicio' | 'horaFim', value: string) => void;
+  onTimeChange: (time: 'startTime' | 'endTime', value: string) => void;
   onImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   onOrganizerChange: (
@@ -50,9 +50,9 @@ export default function EventForm({
 
   // helper pra ligar o input type="time" na função genérica
   const handleTimeInput =
-    (name: 'horaInicio' | 'horaFim') =>
+    (time: 'startTime' | 'endTime') =>
     (e: ChangeEvent<HTMLInputElement>) => {
-      onTimeChange(name, e.target.value);
+      onTimeChange(time, e.target.value);
     };
 
   return (
@@ -107,7 +107,7 @@ export default function EventForm({
                   name="startTime"
                   type="time"
                   value={form.startTime}
-                  onChange={handleTimeInput('horaInicio')}
+                  onChange={handleTimeInput('startTime')}
                   margin="normal"
                   required
                 />
@@ -120,7 +120,7 @@ export default function EventForm({
                   name="endTime"
                   type="time"
                   value={form.endTime}
-                  onChange={handleTimeInput('horaFim')}
+                  onChange={handleTimeInput('endTime')}
                   margin="normal"
                 />
               </Grid>
@@ -273,9 +273,9 @@ export default function EventForm({
                 <TextField
                   fullWidth
                   label="Nome"
-                  value={organizer.name}
+                  value={organizer.organizerName}
                   onChange={(e) =>
-                    onOrganizerChange(e, index, 'name')
+                    onOrganizerChange(e, index, 'organizerName')
                   }
                   margin="dense"
                   required
