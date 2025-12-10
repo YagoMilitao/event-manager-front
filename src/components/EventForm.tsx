@@ -11,8 +11,9 @@ import {
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { ChangeEvent } from 'react';
-import { CreateEventForm} from '../data/CreateEventData';
+import { CreateEventForm } from '../data/CreateEventData';
 import { Organizer } from '../data/OrganizerData';
+import { EventImage } from '../data/EventData';
 
 interface EventFormProps {
   mode: 'create' | 'edit';
@@ -22,10 +23,11 @@ interface EventFormProps {
   onTimeChange: (time: 'startTime' | 'endTime', value: string) => void;
   onImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
+  onToggleExistingImage?: (url: string) => void;
   onOrganizerChange: (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     index: number,
-    field: keyof Organizer
+    field: keyof Organizer,
   ) => void;
   onAddOrganizer: () => void;
   onRemoveOrganizer: (index: number) => void;
@@ -40,6 +42,7 @@ export default function EventForm({
   onTimeChange,
   onImageChange,
   onRemoveImage,
+  onToggleExistingImage,
   onOrganizerChange,
   onAddOrganizer,
   onRemoveOrganizer,
@@ -48,12 +51,14 @@ export default function EventForm({
   const title = mode === 'create' ? 'Criar Evento' : 'Editar Evento';
   const buttonLabel = mode === 'create' ? 'Salvar evento' : 'Atualizar evento';
 
-  // helper pra ligar o input type="time" na função genérica
   const handleTimeInput =
     (time: 'startTime' | 'endTime') =>
     (e: ChangeEvent<HTMLInputElement>) => {
       onTimeChange(time, e.target.value);
     };
+
+  const existingImages: EventImage[] = form.existingImages || [];
+  const imagesToDelete: string[] = form.imagesToDelete || [];
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
@@ -167,6 +172,73 @@ export default function EventForm({
                 Imagens do evento
               </Typography>
 
+              {/* 🔹 Imagens já salvas (GCP) */}
+              {existingImages.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Imagens atuais
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: 2,
+                    }}
+                  >
+                    {existingImages.map((img, index) => {
+                      const isMarked = imagesToDelete.includes(img.url);
+                      return (
+                        <Box
+                          key={img.filename || index}
+                          sx={{
+                            position: 'relative',
+                            width: 140,
+                            height: 100,
+                            borderRadius: 1,
+                            overflow: 'hidden',
+                            border: '1px solid',
+                            borderColor: isMarked ? 'error.main' : 'divider',
+                            opacity: isMarked ? 0.6 : 1,
+                          }}
+                        >
+                          <Box
+                            component="img"
+                            src={img.url}
+                            alt={`Imagem atual ${index + 1}`}
+                            sx={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                          {onToggleExistingImage && (
+                            <Button
+                              size="small"
+                              color={isMarked ? 'inherit' : 'error'}
+                              variant="contained"
+                              onClick={() => onToggleExistingImage(img.url)}
+                              sx={{
+                                position: 'absolute',
+                                bottom: 4,
+                                right: 4,
+                                px: 1,
+                                py: 0,
+                                minWidth: 'auto',
+                                fontSize: '0.7rem',
+                              }}
+                            >
+                              {isMarked ? 'Manter' : 'Remover'}
+                            </Button>
+                          )}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              )}
+
+              {/* Input para NOVAS imagens */}
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
@@ -178,7 +250,7 @@ export default function EventForm({
                   startIcon={<UploadFileIcon />}
                   sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Selecionar imagens
+                  Selecionar novas imagens
                   <input
                     type="file"
                     hidden
@@ -189,15 +261,14 @@ export default function EventForm({
                   />
                 </Button>
 
-                {/* contador simples */}
                 {form.images && form.images.length > 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    {form.images.length} imagem(ns) selecionada(s)
+                    {form.images.length} nova(s) imagem(ns) selecionada(s)
                   </Typography>
                 )}
               </Stack>
 
-              {/* 🔹 NOVO: grade de miniaturas */}
+              {/* Previews das novas imagens */}
               {form.imagePreviews && form.imagePreviews.length > 0 && (
                 <Box
                   sx={{
@@ -223,7 +294,7 @@ export default function EventForm({
                       <Box
                         component="img"
                         src={src}
-                        alt={`Imagem ${index + 1}`}
+                        alt={`Nova imagem ${index + 1}`}
                         sx={{
                           width: '100%',
                           height: '100%',
@@ -284,27 +355,21 @@ export default function EventForm({
                   fullWidth
                   label="Email"
                   value={organizer.email}
-                  onChange={(e) =>
-                    onOrganizerChange(e, index, 'email')
-                  }
+                  onChange={(e) => onOrganizerChange(e, index, 'email')}
                   margin="dense"
                 />
                 <TextField
                   fullWidth
                   label="WhatsApp"
                   value={organizer.whatsapp}
-                  onChange={(e) =>
-                    onOrganizerChange(e, index, 'whatsapp')
-                  }
+                  onChange={(e) => onOrganizerChange(e, index, 'whatsapp')}
                   margin="dense"
                 />
                 <TextField
                   fullWidth
                   label="Instagram"
                   value={organizer.instagram}
-                  onChange={(e) =>
-                    onOrganizerChange(e, index, 'instagram')
-                  }
+                  onChange={(e) => onOrganizerChange(e, index, 'instagram')}
                   margin="dense"
                 />
 

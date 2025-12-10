@@ -28,6 +28,15 @@ const EventDetailsPageScreen: React.FC = () => {
   const { event, loading, error, handleBack, handleShare } =
     useEventDetailsViewModel();
 
+  // 👉 Índice da imagem selecionada no "carrossel"
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  // Sempre que o evento mudar, resetamos para a primeira imagem
+  React.useEffect(() => {
+    setSelectedIndex(0);
+  }, [event]);
+
+  // 🔹 Loading
   if (loading) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -36,6 +45,7 @@ const EventDetailsPageScreen: React.FC = () => {
     );
   }
 
+  // 🔹 Erro ou evento não encontrado
   if (error || !event) {
     return (
       <Container sx={{ mt: 4, textAlign: 'center' }}>
@@ -81,15 +91,31 @@ const EventDetailsPageScreen: React.FC = () => {
   // 🔹 Resolve qual imagem principal mostrar (GCP primeiro, depois campo antigo image)
   const coverFromGcp: EventImage | undefined =
     event.coverImage ||
-    (event.images && event.images.length > 0
-      ? event.images[0]
-      : undefined);
+    (event.images && event.images.length > 0 ? event.images[0] : undefined);
 
-  const coverUrl = coverFromGcp?.url || event.image || undefined;
 
-  // Outras imagens (galeria) — aqui você pode filtrar a capa se quiser
+  // 🔹 Todas as imagens para o "carrossel"
   const galleryImages: EventImage[] =
     event.images && event.images.length > 0 ? event.images : [];
+
+  const allImages: EventImage[] = [];
+
+  if (coverFromGcp) {
+    allImages.push(coverFromGcp);
+  }
+
+  // Evita duplicar se a capa já estiver dentro de images
+  galleryImages.forEach((img) => {
+    const alreadyIn =
+      allImages.find((i) => i.filename === img.filename && i.url === img.url) !==
+      undefined;
+    if (!alreadyIn) {
+      allImages.push(img);
+    }
+  });
+
+  const hasImages = allImages.length > 0;
+  const currentImage = hasImages ? allImages[selectedIndex] : undefined;
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
@@ -160,53 +186,63 @@ const EventDetailsPageScreen: React.FC = () => {
 
         <Divider sx={{ my: 2 }} />
 
-        {/* 🔹 Imagem principal */}
-        {coverUrl && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <img
-              src={coverUrl}
-              alt={title}
-              style={{
-                maxWidth: '100%',
-                maxHeight: 400,
-                borderRadius: 8,
-                objectFit: 'cover',
-              }}
-            />
-          </Box>
-        )}
-
-        {/* 🔹 Galeria de miniaturas (se houver mais de uma imagem) */}
-        {galleryImages.length > 1 && (
+        {/* 🔹 Carrossel de imagens (imagem principal + miniaturas) */}
+        {hasImages && currentImage && (
           <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Outras imagens
-            </Typography>
+            {/* Imagem principal */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <img
+                src={currentImage.url}
+                alt={title}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: 400,
+                  borderRadius: 8,
+                  objectFit: 'cover',
+                }}
+              />
+            </Box>
 
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {galleryImages.map((img, index) => (
-                <Box
-                  key={img.filename || index}
-                  sx={{
-                    width: 90,
-                    height: 90,
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                  }}
-                >
-                  <img
-                    src={img.url}
-                    alt={`Imagem ${index + 1}`}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }}
-                  />
-                </Box>
-              ))}
-            </Stack>
+            {/* Miniaturas */}
+            {allImages.length > 1 && (
+              <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+                {allImages.map((img, index) => {
+                  const isSelected = index === selectedIndex;
+                  return (
+                    <Box
+                      key={img.filename || `${img.url}-${index}`}
+                      sx={{
+                        width: 90,
+                        height: 90,
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        border: isSelected
+                          ? `2px solid ${theme.palette.primary.main}`
+                          : '1px solid rgba(255,255,255,0.12)',
+                        cursor: 'pointer',
+                        opacity: isSelected ? 1 : 0.7,
+                        transition: 'transform 0.2s, opacity 0.2s, border 0.2s',
+                        '&:hover': {
+                          opacity: 1,
+                          transform: 'scale(1.03)',
+                        },
+                      }}
+                      onClick={() => setSelectedIndex(index)}
+                    >
+                      <img
+                        src={img.url}
+                        alt={`Imagem ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
           </Box>
         )}
 
@@ -220,6 +256,7 @@ const EventDetailsPageScreen: React.FC = () => {
           </Box>
         )}
 
+        {/* 🔹 Local + preço */}
         <Box sx={{ mb: 2 }}>
           {event.location && (
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -256,7 +293,9 @@ const EventDetailsPageScreen: React.FC = () => {
 
                 return (
                   <Box key={index}>
-                    <Typography variant="subtitle1">{org.organizerName}</Typography>
+                    <Typography variant="subtitle1">
+                      {org.organizerName}
+                    </Typography>
 
                     <Stack direction="row" spacing={1}>
                       {whatsappLink && (

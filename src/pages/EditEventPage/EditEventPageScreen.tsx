@@ -15,6 +15,7 @@ export default function EditEventPageScreen() {
     handleAddOrganizer,
     handleRemoveOrganizer,
     handleUpdateClick,
+    handleToggleExistingImage,
   } = useEditEventViewModel();
 
   if (loading) {
@@ -30,6 +31,7 @@ export default function EditEventPageScreen() {
       onTimeChange={handleTimeChange}
       onImageChange={handleImageChange}
       onRemoveImage={handleRemoveImage}
+      onToggleExistingImage={handleToggleExistingImage}
       onOrganizerChange={handleOrganizerChange}
       onAddOrganizer={handleAddOrganizer}
       onRemoveOrganizer={handleRemoveOrganizer}
