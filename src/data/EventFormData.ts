@@ -1,11 +1,11 @@
 export type EventFormData = {
-    titulo: string;
-    descricao: string;
-    data: string;
-    horaInicio: string;
-    local: string;
-    preco?: number;
-    traje?: string;
+    eventName: string;
+    description: string;
+    date: string;
+    startTime: string;
+    location: string;
+    price?: number;
+    dressCode?: string;
     image?: File | null;
     loading: boolean;
   }

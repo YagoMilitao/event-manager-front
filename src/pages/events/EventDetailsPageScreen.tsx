@@ -1,34 +1,45 @@
-// 🔹 Tela de detalhes do evento (somente UI + uso do viewModel)
-
-import React from 'react'; // importa React
-import { useTheme } from '@mui/material/styles'; // hook para acessar o tema (dark/light)
+import React from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
-  Container, // wrapper que centraliza conteúdo
-  Typography, // textos
-  Box, // div flexível
-  Paper, // cartão com fundo elevado
-  Chip, // etiquetas (tags)
-  Button, // botões
-  Stack, // layout em coluna/linha com espaçamento
-  Divider, // linha separadora
-  Link as MuiLink, // link estilizado do MUI
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Chip,
+  Button,
+  Stack,
+  Divider,
+  Link as MuiLink,
+  IconButton,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'; // ícone de voltar
-import ShareIcon from '@mui/icons-material/Share'; // ícone de compartilhar
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday'; // ícone de calendário
-import AccessTimeIcon from '@mui/icons-material/AccessTime'; // ícone de relógio
-import PlaceIcon from '@mui/icons-material/Place'; // ícone de local
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney'; // ícone de preço
-import PeopleIcon from '@mui/icons-material/People'; // ícone de pessoas
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ShareIcon from '@mui/icons-material/Share';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import PlaceIcon from '@mui/icons-material/Place';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import PeopleIcon from '@mui/icons-material/People';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
-import { formatDatePt, formatHour } from '../../utils/dateTimeFormat'; // funções de formatação que você já tem
-import { useEventDetailsViewModel } from '../../viewModels/useEventDetailsViewModel'; // nosso viewModel novinho
+import { formatDatePt, formatHour } from '../../utils/dateTimeFormat';
+import { useEventDetailsViewModel } from '../../viewModels/useEventDetailsViewModel';
+import { EventImage } from '../../data/EventData';
 
 const EventDetailsPageScreen: React.FC = () => {
-  const theme = useTheme(); // pega o tema atual (dark/light)
-  const { event, loading, error, handleBack, handleShare } = useEventDetailsViewModel(); // usa o viewModel para pegar dados e ações
+  const theme = useTheme();
+  const { event, loading, error, handleBack, handleShare } =
+    useEventDetailsViewModel();
 
-  // 🔹 Estado de loading
+  // índice da imagem selecionada no carrossel
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  // sempre que o evento mudar, volta pra primeira imagem
+  React.useEffect(() => {
+    setSelectedIndex(0);
+  }, [event]);
+
+  // 🔹 Loading
   if (loading) {
     return (
       <Container sx={{ mt: 4 }}>
@@ -37,7 +48,7 @@ const EventDetailsPageScreen: React.FC = () => {
     );
   }
 
-  // 🔹 Estado de erro
+  // 🔹 Erro ou evento não encontrado
   if (error || !event) {
     return (
       <Container sx={{ mt: 4, textAlign: 'center' }}>
@@ -55,26 +66,77 @@ const EventDetailsPageScreen: React.FC = () => {
     );
   }
 
-  // 🔹 Deriva dados formatados do evento
-  const title = event.titulo ||  'Evento'; // garante um título
-  const dateLabel = event.data ? formatDatePt(event.data) : 'Data não informada'; // formata a data
-  const horaInicioLabel = event.horaInicio
-    ? formatHour(event.horaInicio)
-    : null; // formata hora de início
-  const horaFimLabel = event.horaFim ? formatHour(event.horaFim) : null; // formata hora de fim
+  // 🔹 Dados derivados
+  const title = event.eventName || 'Título não encontrado';
 
-  let timeRangeLabel = ''; // string do horário mostrado na tela
+  const dateLabel = event.date
+    ? formatDatePt(event.date as string)
+    : 'Data não informada';
+
+  const horaInicioLabel = event.startTime
+    ? formatHour(event.startTime)
+    : null;
+
+  const horaFimLabel = event.endTime
+    ? formatHour(event.endTime)
+    : null;
+
+  let timeRangeLabel = '';
   if (horaInicioLabel && horaFimLabel) {
-    timeRangeLabel = `${horaInicioLabel} - ${horaFimLabel}`; // exemplo: 19:00 - 22:00
+    timeRangeLabel = `${horaInicioLabel} - ${horaFimLabel}`;
   } else if (horaInicioLabel) {
-    timeRangeLabel = horaInicioLabel; // exemplo: 19:00
+    timeRangeLabel = horaInicioLabel;
   }
 
-  const hasOrganizers = Array.isArray(event.organizadores) && event.organizadores.length > 0; // verifica se tem organizadores
+  const hasOrganizers =
+    Array.isArray(event.organizers) && event.organizers.length > 0;
+
+  // 🔹 Resolve qual imagem principal mostrar (GCP primeiro, depois campo antigo image)
+  const coverFromGcp: EventImage | undefined =
+    event.coverImage ||
+    (event.images && event.images.length > 0 ? event.images[0] : undefined);
+
+  // 🔹 Todas as imagens para o carrossel
+  const galleryImages: EventImage[] =
+    event.images && event.images.length > 0 ? event.images : [];
+
+  const allImages: EventImage[] = [];
+
+  if (coverFromGcp) {
+    allImages.push(coverFromGcp);
+  }
+
+  // evita duplicar se a capa já estiver dentro de images
+  galleryImages.forEach((img) => {
+    const alreadyIn =
+      allImages.find((i) => i.filename === img.filename && i.url === img.url) !==
+      undefined;
+    if (!alreadyIn) {
+      allImages.push(img);
+    }
+  });
+
+  const hasImages = allImages.length > 0;
+  const currentImage = hasImages ? allImages[selectedIndex] : undefined;
+
+  // 🔹 handlers das setas
+  const handlePrevImage = () => {
+    if (!hasImages) return;
+    setSelectedIndex((prev) =>
+      (prev - 1 + allImages.length) % allImages.length,
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!hasImages) return;
+    setSelectedIndex((prev) =>
+      (prev + 1) % allImages.length,
+    );
+  };
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
-      {/* 🔹 Barra superior com botão de voltar e compartilhar */}
+      {/* 🔹 Barra superior */}
       <Box
         sx={{
           display: 'flex',
@@ -100,7 +162,7 @@ const EventDetailsPageScreen: React.FC = () => {
         </Button>
       </Box>
 
-      {/* 🔹 Card principal do evento */}
+      {/* 🔹 Card principal */}
       <Paper
         elevation={3}
         sx={{
@@ -108,7 +170,7 @@ const EventDetailsPageScreen: React.FC = () => {
           backgroundColor: theme.palette.background.paper,
         }}
       >
-        {/* Título + tags básicas */}
+        {/* Título + chips */}
         <Box sx={{ mb: 2 }}>
           <Typography variant="h4" gutterBottom>
             {title}
@@ -122,6 +184,7 @@ const EventDetailsPageScreen: React.FC = () => {
               color="primary"
               variant="outlined"
             />
+
             {/* Horário */}
             {timeRangeLabel && (
               <Chip
@@ -131,52 +194,156 @@ const EventDetailsPageScreen: React.FC = () => {
                 variant="outlined"
               />
             )}
-            {/* Traje */}
-            {event.traje && (
-              <Chip
-                label={`Traje: ${event.traje}`}
-                variant="outlined"
-              />
+
+            {event.dressCode && (
+              <Chip label={`Traje: ${event.dressCode}`} variant="outlined" />
             )}
           </Stack>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Descrição */}
-        {event.descricao && (
+        {/* 🔹 Carrossel de imagens */}
+        {hasImages && currentImage && (
+          <Box sx={{ mb: 3 }}>
+            {/* Imagem principal + setas */}
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mb: 2,
+              }}
+            >
+              {/* seta esquerda */}
+              {allImages.length > 1 && (
+                <IconButton
+                  onClick={handlePrevImage}
+                  sx={{
+                    position: 'absolute',
+                    left: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                    },
+                    color: '#fff',
+                  }}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+              )}
+
+              <img
+                src={currentImage.url}
+                alt={title}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: 400,
+                  borderRadius: 8,
+                  objectFit: 'cover',
+                }}
+              />
+
+              {/* seta direita */}
+              {allImages.length > 1 && (
+                <IconButton
+                  onClick={handleNextImage}
+                  sx={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                    },
+                    color: '#fff',
+                  }}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              )}
+            </Box>
+
+            {/* Miniaturas */}
+            {allImages.length > 1 && (
+              <Stack
+                direction="row"
+                spacing={1}
+                flexWrap="wrap"
+                justifyContent="center"
+              >
+                {allImages.map((img, index) => {
+                  const isSelected = index === selectedIndex;
+                  return (
+                    <Box
+                      key={img.filename || `${img.url}-${index}`}
+                      sx={{
+                        width: 90,
+                        height: 90,
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        border: isSelected
+                          ? `2px solid ${theme.palette.primary.main}`
+                          : '1px solid rgba(255,255,255,0.12)',
+                        cursor: 'pointer',
+                        opacity: isSelected ? 1 : 0.7,
+                        transition: 'transform 0.2s, opacity 0.2s, border 0.2s',
+                        '&:hover': {
+                          opacity: 1,
+                          transform: 'scale(1.03)',
+                        },
+                      }}
+                      onClick={() => setSelectedIndex(index)}
+                    >
+                      <img
+                        src={img.url}
+                        alt={`Imagem ${index + 1}`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+            )}
+          </Box>
+        )}
+
+        {/* 🔹 Descrição */}
+        {event.description && (
           <Box sx={{ mb: 2 }}>
             <Typography variant="h6" gutterBottom>
               Descrição
             </Typography>
-            <Typography variant="body1">{event.descricao}</Typography>
+            <Typography variant="body1">{event.description}</Typography>
           </Box>
         )}
 
-        {/* Local + preço */}
+        {/* 🔹 Local + preço */}
         <Box sx={{ mb: 2 }}>
-          {event.local && (
+          {event.location && (
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <PlaceIcon sx={{ mr: 1 }} />
-              <Typography variant="body1">{event.local}</Typography>
+              <Typography variant="body1">{event.location}</Typography>
             </Box>
           )}
 
-          {event.preco && (
+          {event.price && (
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <AttachMoneyIcon sx={{ mr: 1 }} />
-              <Typography variant="body1">Preço: {event.preco}</Typography>
+              <Typography variant="body1">Preço: {event.price}</Typography>
             </Box>
           )}
-          
         </Box>
-        {event.image && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <img src={event.image} alt={event.titulo || 'Imagem do evento'} style={{ maxWidth: '100%', maxHeight: 400 }} />
-            </Box>
-          )}
 
-        {/* Organizadores com links clicáveis */}
+        {/* 🔹 Organizadores */}
         {hasOrganizers && (
           <Box sx={{ mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -185,18 +352,20 @@ const EventDetailsPageScreen: React.FC = () => {
             </Box>
 
             <Stack spacing={1}>
-              {event.organizadores!.map((org, index) => {
-                // monta links se os campos existirem
+              {event.organizers!.map((org, index) => {
                 const whatsappLink = org.whatsapp
                   ? `https://wa.me/${org.whatsapp.replace(/\D/g, '')}`
-                  : null; // remove caracteres não numéricos
+                  : null;
+
                 const instagramLink = org.instagram
                   ? `${org.instagram.replace('@', '')}`
                   : null;
 
                 return (
                   <Box key={index}>
-                    <Typography variant="subtitle1">{org.nome}</Typography>
+                    <Typography variant="subtitle1">
+                      {org.organizerName}
+                    </Typography>
 
                     <Stack direction="row" spacing={1}>
                       {whatsappLink && (
@@ -208,6 +377,7 @@ const EventDetailsPageScreen: React.FC = () => {
                           WhatsApp
                         </MuiLink>
                       )}
+
                       {instagramLink && (
                         <MuiLink
                           href={instagramLink}
@@ -217,6 +387,7 @@ const EventDetailsPageScreen: React.FC = () => {
                           Instagram
                         </MuiLink>
                       )}
+
                       {org.email && (
                         <MuiLink href={`mailto:${org.email}`}>
                           E-mail

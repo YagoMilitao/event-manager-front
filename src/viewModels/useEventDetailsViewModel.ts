@@ -1,27 +1,25 @@
-// 🔹 Hook responsável por toda a lógica da tela de detalhes do evento.
-
-import { useEffect, useState, useCallback } from 'react'; // importa hooks do React
-import { useNavigate, useParams } from 'react-router-dom'; // hooks de rota (pegar :id e navegar)
-import api from '../api/api'; // instância configurada do axios
-import { EventData } from '../data/EventData'; // tipo de evento que você já usa
-import { toast } from 'react-toastify'; // para mostrar toasts de erro / sucesso
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useCallback } from 'react'; 
+import { useNavigate, useParams } from 'react-router-dom'; 
+import api from '../api/api';
+import { EventData } from '../data/EventData';
+import { toast } from 'react-toastify';
 
 interface UseEventDetailsViewModelReturn {
-  event: EventData | null; // dados do evento carregado (ou null se ainda não veio)
-  loading: boolean; // estado de carregamento
-  error: string | null; // mensagem de erro (se der ruim)
-  handleBack: () => void; // voltar para a tela anterior
-  handleShare: () => void; // copiar link do evento
+  event: EventData | null;
+  loading: boolean;
+  error: string | null;
+  handleBack: () => void;
+  handleShare: () => void;
 }
 
-// 🔸 Hook principal da tela de detalhes
 export function useEventDetailsViewModel(): UseEventDetailsViewModelReturn {
-  const { id } = useParams<{ id: string }>(); // pega o :id da URL
-  const navigate = useNavigate(); // hook para navegar entre rotas
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  const [event, setEvent] = useState<EventData | null>(null); // guarda o evento retornado pela API
-  const [loading, setLoading] = useState<boolean>(true); // indica se está carregando
-  const [error, setError] = useState<string | null>(null); // guarda mensagem de erro, se existir
+  const [event, setEvent] = useState<EventData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 🔹 Busca detalhes do evento na API
   const fetchEvent = useCallback(async () => {
@@ -32,8 +30,8 @@ export function useEventDetailsViewModel(): UseEventDetailsViewModelReturn {
     }
 
     try {
-      setLoading(true); // inicia loading
-      setError(null); // limpa erro anterior
+      setLoading(true); 
+      setError(null);
 
       // faz GET na API backend para /api/events/:id
       const response = await api.get(`/api/events/${id}`);
@@ -41,15 +39,14 @@ export function useEventDetailsViewModel(): UseEventDetailsViewModelReturn {
       // se vier no formato simples (um objeto só)
       setEvent(response.data as EventData); // guarda o evento no estado
     } catch (err: any) {
-      console.error('🔥 Erro ao buscar detalhes do evento:', err); // log no console
+      console.error('🔥 Erro ao buscar detalhes do evento:', err);
 
       const msg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
-        'Erro ao carregar detalhes do evento.'; // monta mensagem amigável
-
-      setError(msg); // atualiza estado de erro
-      toast.error(msg); // mostra toast na tela
+        'Erro ao carregar detalhes do evento.'; 
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false); // sempre desliga o loading
     }
@@ -87,7 +84,6 @@ export function useEventDetailsViewModel(): UseEventDetailsViewModelReturn {
     }
   }, []); // não depende de nada externo
 
-  // 🔹 Retorna tudo que a UI precisa para renderizar
   return {
     event, // dados do evento
     loading, // estado de carregamento

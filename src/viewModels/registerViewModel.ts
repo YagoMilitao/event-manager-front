@@ -20,8 +20,8 @@ export function useRegisterViewModel() {
       await createUserWithEmailAndPassword(auth, form.email, form.password)
       toast.success('Conta criada com sucesso!')
       navigate('/login')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+
+    } catch (error) {
       console.error('Erro ao criar conta:', error)
       toast.error('Erro ao criar conta. Verifique suas credenciais.')
     } finally {

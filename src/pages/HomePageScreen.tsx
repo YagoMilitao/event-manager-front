@@ -3,9 +3,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import {
   Container,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
   Button,
   Box,
   Paper,
@@ -16,7 +13,6 @@ import {
   Checkbox,
 } from '@mui/material';
 import EventListSkeleton from '../components/skeletons/EventListSkeleton';
-import { formatDatePt, formatHour } from '../utils/dateTimeFormat';
 import { useHomePageViewModel } from '../viewModels/useHomePageViewModel';
 import EventTable from '../components/EventTable';
 
@@ -48,8 +44,6 @@ const HomePageScreen: React.FC = () => {
 
       {/* Skeleton enquanto busca os eventos */}
       <EventListSkeleton rows={6} showActions={true} />
-
-      {/* Texto indicando que está carregando (sabendo que o backend é lento mesmo) */}
       <Typography
         variant="body2"
         color="text.secondary"
@@ -114,7 +108,7 @@ const HomePageScreen: React.FC = () => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Buscar por nome ou descrição"
+                label="Buscar por nome do evento ou descrição"
                 value={filters.searchText}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 size="small"
@@ -136,7 +130,6 @@ const HomePageScreen: React.FC = () => {
                 fullWidth
                 label="Data inicial"
                 type="date"
-                InputLabelProps={{ shrink: true }}
                 value={filters.dateFrom}
                 onChange={(e) => handleDateChange('dateFrom', e.target.value)}
                 size="small"
@@ -147,7 +140,6 @@ const HomePageScreen: React.FC = () => {
                 fullWidth
                 label="Data final"
                 type="date"
-                InputLabelProps={{ shrink: true }}
                 value={filters.dateTo}
                 onChange={(e) => handleDateChange('dateTo', e.target.value)}
                 size="small"
@@ -258,7 +250,7 @@ const HomePageScreen: React.FC = () => {
             <Button
               variant="outlined"
               onClick={handleLoadMore}
-              disabled={loadingMore}                // desabilita enquanto estiver carregando próxima página
+              disabled={loadingMore}
             >
               {loadingMore ? 'Carregando...' : 'Carregar mais'}
             </Button>

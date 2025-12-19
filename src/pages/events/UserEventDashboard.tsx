@@ -7,10 +7,10 @@ import {
   Paper,                                               
   Stack,                                               
 } from '@mui/material';
-import CelebrationIcon from '@mui/icons-material/Celebration';     // Ícone de festa (só pra dar estilo)
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'; // Ícone para "criar"
-import ListAltIcon from '@mui/icons-material/ListAlt';             // Ícone de lista
-import HomeIcon from '@mui/icons-material/Home';                   // Ícone de "home"
+import CelebrationIcon from '@mui/icons-material/Celebration';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import HomeIcon from '@mui/icons-material/Home';
 
 import {                                                // Importa o hook de viewModel
   useUserEventDashboardViewModel,
@@ -20,9 +20,9 @@ import {                                                // Importa o hook de vie
 const UserEventDashboard: React.FC = () => {
   // Usa o hook para pegar as ações de navegação
   const {
-    handleGoToMyEvents,       // Ir para /my-events
-    handleGoToCreateEvent,    // Ir para /create-event
-    handleGoToHome,           // Ir para /
+    handleGoToMyEvents,
+    handleGoToCreateEvent,
+    handleGoToHome,   
   } = useUserEventDashboardViewModel();
 
   // Renderização da UI
@@ -48,7 +48,7 @@ const UserEventDashboard: React.FC = () => {
             gap: 1,                       // Espaço entre ícone e texto
           }}
         >
-          <CelebrationIcon />             // Ícone só pra dar um "clima" de evento
+          <CelebrationIcon />
           <Typography
             variant="h4"                  // Tamanho do título
             component="h1"                // Semântica HTML
@@ -114,4 +114,4 @@ const UserEventDashboard: React.FC = () => {
   );
 };
 
-export default UserEventDashboard;   // Exporta o componente para ser usado no Router
+export default UserEventDashboard;

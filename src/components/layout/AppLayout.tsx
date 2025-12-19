@@ -13,10 +13,7 @@ export default function AppLayout() {
         flexDirection: 'column',
       }}
     >
-      {/* Header full width */}
       <AppHeader />
-
-      {/* Conteúdo principal */}
       <Box
         component="main"
         sx={{

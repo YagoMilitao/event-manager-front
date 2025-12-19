@@ -3,15 +3,10 @@ import { Link as RouterLink } from 'react-router-dom';        // links internos
 import {
   Container,
   Typography,
-  Card,
-  CardContent,
-  CardActions,
   Button,
   Alert,
   Box,
   Skeleton,
-  Grid,
-  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -23,7 +18,7 @@ import {
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SelectAllIcon from '@mui/icons-material/SelectAll';
 
-import { formatHour, formatDatePt } from '../../utils/dateTimeFormat'; // formata data/hora
+import {formatDatePt } from '../../utils/dateTimeFormat'; // formata data/hora
 import EventBadge from '../../components/EventBadge';                  // chip bonitinho
 import { useMyEventsViewModel } from '../../viewModels/useMyEventsViewModel'; // hook de lógica
 import EventTable from '../../components/EventTable';
@@ -48,7 +43,6 @@ const MyEventsPageScreen: React.FC = () => {
     handleLoadMore,
   } = useMyEventsViewModel();
 
-  // 👉 loading state
   if (loading) {
     return (
       <Container
@@ -70,7 +64,6 @@ const MyEventsPageScreen: React.FC = () => {
     );
   }
 
-  // 👉 erro
   if (error) {
     return (
       <Container sx={{ mt: 4, textAlign: 'center' }}>
@@ -165,8 +158,8 @@ const MyEventsPageScreen: React.FC = () => {
               {selectedEvents.map((e) => (
                 <ListItem key={e._id}>
                   <ListItemText
-                    primary={e.titulo}
-                    secondary={formatDatePt(e.data as unknown as string)}
+                    primary={e.eventName}
+                    secondary={formatDatePt(e.date)}
                   />
                 </ListItem>
               ))}
