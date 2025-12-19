@@ -10,6 +10,7 @@ import {
   Stack,
   Divider,
   Link as MuiLink,
+  IconButton,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
@@ -18,6 +19,8 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PlaceIcon from '@mui/icons-material/Place';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import PeopleIcon from '@mui/icons-material/People';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import { formatDatePt, formatHour } from '../../utils/dateTimeFormat';
 import { useEventDetailsViewModel } from '../../viewModels/useEventDetailsViewModel';
@@ -28,10 +31,10 @@ const EventDetailsPageScreen: React.FC = () => {
   const { event, loading, error, handleBack, handleShare } =
     useEventDetailsViewModel();
 
-  // 👉 Índice da imagem selecionada no "carrossel"
+  // índice da imagem selecionada no carrossel
   const [selectedIndex, setSelectedIndex] = React.useState(0);
 
-  // Sempre que o evento mudar, resetamos para a primeira imagem
+  // sempre que o evento mudar, volta pra primeira imagem
   React.useEffect(() => {
     setSelectedIndex(0);
   }, [event]);
@@ -93,8 +96,7 @@ const EventDetailsPageScreen: React.FC = () => {
     event.coverImage ||
     (event.images && event.images.length > 0 ? event.images[0] : undefined);
 
-
-  // 🔹 Todas as imagens para o "carrossel"
+  // 🔹 Todas as imagens para o carrossel
   const galleryImages: EventImage[] =
     event.images && event.images.length > 0 ? event.images : [];
 
@@ -104,7 +106,7 @@ const EventDetailsPageScreen: React.FC = () => {
     allImages.push(coverFromGcp);
   }
 
-  // Evita duplicar se a capa já estiver dentro de images
+  // evita duplicar se a capa já estiver dentro de images
   galleryImages.forEach((img) => {
     const alreadyIn =
       allImages.find((i) => i.filename === img.filename && i.url === img.url) !==
@@ -116,6 +118,21 @@ const EventDetailsPageScreen: React.FC = () => {
 
   const hasImages = allImages.length > 0;
   const currentImage = hasImages ? allImages[selectedIndex] : undefined;
+
+  // 🔹 handlers das setas
+  const handlePrevImage = () => {
+    if (!hasImages) return;
+    setSelectedIndex((prev) =>
+      (prev - 1 + allImages.length) % allImages.length,
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!hasImages) return;
+    setSelectedIndex((prev) =>
+      (prev + 1) % allImages.length,
+    );
+  };
 
   return (
     <Container sx={{ mt: 4, mb: 4 }}>
@@ -186,11 +203,39 @@ const EventDetailsPageScreen: React.FC = () => {
 
         <Divider sx={{ my: 2 }} />
 
-        {/* 🔹 Carrossel de imagens (imagem principal + miniaturas) */}
+        {/* 🔹 Carrossel de imagens */}
         {hasImages && currentImage && (
           <Box sx={{ mb: 3 }}>
-            {/* Imagem principal */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            {/* Imagem principal + setas */}
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mb: 2,
+              }}
+            >
+              {/* seta esquerda */}
+              {allImages.length > 1 && (
+                <IconButton
+                  onClick={handlePrevImage}
+                  sx={{
+                    position: 'absolute',
+                    left: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                    },
+                    color: '#fff',
+                  }}
+                >
+                  <ChevronLeftIcon />
+                </IconButton>
+              )}
+
               <img
                 src={currentImage.url}
                 alt={title}
@@ -201,11 +246,36 @@ const EventDetailsPageScreen: React.FC = () => {
                   objectFit: 'cover',
                 }}
               />
+
+              {/* seta direita */}
+              {allImages.length > 1 && (
+                <IconButton
+                  onClick={handleNextImage}
+                  sx={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                    },
+                    color: '#fff',
+                  }}
+                >
+                  <ChevronRightIcon />
+                </IconButton>
+              )}
             </Box>
 
             {/* Miniaturas */}
             {allImages.length > 1 && (
-              <Stack direction="row" spacing={1} flexWrap="wrap" justifyContent="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                flexWrap="wrap"
+                justifyContent="center"
+              >
                 {allImages.map((img, index) => {
                   const isSelected = index === selectedIndex;
                   return (
