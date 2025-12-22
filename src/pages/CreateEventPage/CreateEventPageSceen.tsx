@@ -16,6 +16,8 @@ export default function CreateEventPageScreen() {
     handleAddOrganizer,
     handleRemoveOrganizer,
     handleSaveClick,
+    handleAddressChange,
+    handleFetchCep
   } = useCreateEventViewModel();
 
   const [loading, setLoading] = useState(true);
@@ -55,6 +57,8 @@ export default function CreateEventPageScreen() {
       onAddOrganizer={handleAddOrganizer}
       onRemoveOrganizer={handleRemoveOrganizer}
       onSubmit={handleSaveClick}
+      onAddressChange={handleAddressChange}
+      onFetchCep={handleFetchCep}
     />
   );
 }

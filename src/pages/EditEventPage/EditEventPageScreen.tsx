@@ -16,6 +16,8 @@ export default function EditEventPageScreen() {
     handleRemoveOrganizer,
     handleUpdateClick,
     handleToggleExistingImage,
+    handleAddressChange,
+    handleFetchCep
   } = useEditEventViewModel();
 
   if (loading) {
@@ -36,6 +38,8 @@ export default function EditEventPageScreen() {
       onAddOrganizer={handleAddOrganizer}
       onRemoveOrganizer={handleRemoveOrganizer}
       onSubmit={handleUpdateClick}
+      onAddressChange={handleAddressChange}
+      onFetchCep={handleFetchCep}
     />
   );
 }

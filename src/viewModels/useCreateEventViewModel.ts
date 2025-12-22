@@ -45,7 +45,17 @@ export function useCreateEventViewModel() {
     date: '',
     startTime: '',
     endTime: '',
-    location: '',
+    address: {
+      cep: '',
+      street: '',
+      number: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      complement: '',
+    },
+    locationLabel: '',
+    geo: undefined,
     price: '',
     dressCode: '',
     organizers: [initialOrganizer],
@@ -109,16 +119,11 @@ export function useCreateEventViewModel() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-
-    const fileArray = Array.from(files).slice(0, 5); // limita a 5 imagens
-
-    // cria URLs locais para preview
+    const fileArray = Array.from(files).slice(0, 5);
     const previews = fileArray.map((file) => URL.createObjectURL(file));
 
     setForm((prev) => {
-      // limpa URLs antigas para evitar vazamento de memória
       prev.imagePreviews.forEach((url) => URL.revokeObjectURL(url));
-
       return {
         ...prev,
         images: fileArray,
@@ -127,7 +132,6 @@ export function useCreateEventViewModel() {
     });
   };
 
-  // 🔹 remover UMA imagem (arquivo + preview)
   const handleRemoveImage = (index: number) => {
     setForm((prev) => {
       const newImages = [...prev.images];
@@ -148,6 +152,68 @@ export function useCreateEventViewModel() {
     });
   };
 
+  async function fetchCep(cepRaw: string) {
+    const cep = cepRaw.replace(/\D/g, '');
+    if (cep.length !== 8) throw new Error('CEP inválido');
+    
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+    
+    if (data.erro) throw new Error('CEP não encontrado');
+    
+    return {
+      street: data.logradouro || '',
+      neighborhood: data.bairro || '',
+      city: data.localidade || '',
+      state: data.uf || '',
+    };
+  }
+
+    const formatCep = (v: string) => {
+    const digits = v.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 5) return digits;
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  };
+
+  const handleAddressChange = (field: keyof CreateEventForm['address'], value: string) => {
+  setForm((prev) => {
+    // ✅ se for CEP, normaliza e aplica máscara 00000-000
+    if (field === 'cep') {
+      return {
+        ...prev,
+        address: { ...prev.address, cep: formatCep(value) },
+      };
+    }
+
+    // ✅ demais campos normais
+    return {
+      ...prev,
+      address: { ...prev.address, [field]: value },
+    };
+  });
+};
+
+  const handleFetchCep = async () => {
+    try {
+      const partial = await fetchCep(form.address.cep);
+      setForm((prev) => {
+        const nextAddress = { ...prev.address, ...partial };
+        const label = `${nextAddress.street}, ${nextAddress.number} - ${nextAddress.neighborhood}, ${nextAddress.city} - ${nextAddress.state}`;
+
+        return {
+          ...prev,
+          address: nextAddress,
+          locationLabel: label,
+          // geo: undefined (se você ainda não geocodificar)
+        };
+      });
+    } catch (e: any) {
+      toast.error(e.message || 'Erro ao buscar CEP');
+    }
+  };
+
+
+
   const handleSaveClick = async () => {
     await handleSubmit();
   };
@@ -160,7 +226,7 @@ export function useCreateEventViewModel() {
 
     try {
       const eventName = form.eventName.trim();
-      const location = form.location.trim();
+      const location = form.address.street.trim();
 
       if (!eventName || !form.date || !form.startTime || !location) {
         toast.error(
@@ -196,7 +262,13 @@ export function useCreateEventViewModel() {
           date: form.date,
           startTime: startTimeNumber,
           endTime: endTimeNumber,
-          location: location,
+          address: form.address,
+          // ✅ obrigatório no backend (Joi)
+          locationLabel:
+            form.locationLabel?.trim() ||
+            `${form.address.street}, ${form.address.number} - ${form.address.neighborhood}, ${form.address.city} - ${form.address.state}`,      
+          // ✅ opcional no Joi (só manda se existir)
+          geo: form.geo,
           price: normalizePrice(form.price),
           dressCode: form.dressCode,
           organizers: cleanedOrganizers,
@@ -229,7 +301,9 @@ export function useCreateEventViewModel() {
       if (endTimeNumber !== undefined) {
         formData.append('endTime', String(endTimeNumber));
       }
-      formData.append('location', location);
+      formData.append('address', JSON.stringify(form.address));
+      formData.append('locationLabel', form.locationLabel);
+      if (form.geo) formData.append('geo', JSON.stringify(form.geo));
       formData.append('price', normalizePrice(form.price));
       formData.append('dressCode', form.dressCode || '');
       formData.append('organizers', JSON.stringify(cleanedOrganizers));
@@ -311,5 +385,7 @@ export function useCreateEventViewModel() {
     handleRemoveOrganizer,
     handleSubmit,
     handleSaveClick,
+    handleAddressChange,
+    handleFetchCep,
   };
 }

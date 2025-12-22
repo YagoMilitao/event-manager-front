@@ -28,6 +28,8 @@ interface EditEventViewModel {
   handleRemoveOrganizer: (index: number) => void;
   handleSubmit: () => Promise<void>;
   handleUpdateClick: () => void;
+  handleFetchCep: () => void;
+  handleAddressChange: (field: keyof CreateEventForm['address'], value: string) => void;
 }
 
 const emptyOrganizer: Organizer = {
@@ -43,7 +45,17 @@ const emptyForm: CreateEventForm = {
   date: '',
   startTime: '',
   endTime: '',
-  location: '',
+  address: {
+    cep: '',
+    street: '',
+    number: '',
+    neighborhood: '',
+    city: '',
+    state: '',
+    complement: '',
+  },
+  locationLabel: '',
+  geo: undefined,
   price: '',
   dressCode: '',
   organizers: [emptyOrganizer],
@@ -267,7 +279,9 @@ export function useEditEventViewModel(): EditEventViewModel {
           date: form.date,
           startTime: timeStringToNumber(form.startTime),
           endTime: timeStringToNumber(form.endTime),
-          location: form.location,
+          address: form.address,
+          locationLabel: form.locationLabel,
+          geo: form.geo,
           price: form.price || '0',
           dressCode: form.dressCode,
           organizers: sanitizedOrganizers,
@@ -299,7 +313,9 @@ export function useEditEventViewModel(): EditEventViewModel {
         const end = timeStringToNumber(form.endTime);
         if (start !== undefined) formData.append('startTime', String(start));
         if (end !== undefined) formData.append('endTime', String(end));
-        formData.append('location', form.location);
+        formData.append('address', JSON.stringify(form.address));
+        formData.append('locationLabel', form.locationLabel);
+        if (form.geo) formData.append('geo', JSON.stringify(form.geo));
         formData.append('price', form.price || '0');
         formData.append('dressCode', form.dressCode || '');
         formData.append('organizers', JSON.stringify(sanitizedOrganizers));
@@ -354,6 +370,49 @@ export function useEditEventViewModel(): EditEventViewModel {
     handleSubmit();
   };
 
+  async function fetchCep(cepRaw: string) {
+    const cep = cepRaw.replace(/\D/g, '');
+    if (cep.length !== 8) throw new Error('CEP inválido');
+
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+    if (data.erro) throw new Error('CEP não encontrado');
+
+    return {
+      street: data.logradouro || '',
+      neighborhood: data.bairro || '',
+      city: data.localidade || '',
+      state: data.uf || '',
+    };
+  }
+
+  const handleAddressChange = (field: keyof CreateEventForm['address'], value: string) => {
+  setForm((prev) => ({
+    ...prev,
+    address: { ...prev.address, [field]: value },
+  }));
+};
+
+const handleFetchCep = async () => {
+  try {
+    const partial = await fetchCep(form.address.cep);
+    setForm((prev) => {
+      const nextAddress = { ...prev.address, ...partial };
+
+      const label = `${nextAddress.street}, ${nextAddress.number} - ${nextAddress.neighborhood}, ${nextAddress.city} - ${nextAddress.state}`;
+
+      return {
+        ...prev,
+        address: nextAddress,
+        locationLabel: label,
+        // geo: undefined (se você ainda não geocodificar)
+      };
+    });
+  } catch (e: any) {
+    toast.error(e.message || 'Erro ao buscar CEP');
+  }
+};
+
   return {
     form,
     loading,
@@ -368,5 +427,7 @@ export function useEditEventViewModel(): EditEventViewModel {
     handleRemoveOrganizer,
     handleSubmit,
     handleUpdateClick,
+    handleAddressChange,
+    handleFetchCep,
   };
 }
