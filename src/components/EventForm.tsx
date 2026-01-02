@@ -4,11 +4,13 @@ import {
   Button,
   Typography,
   Paper,
-  Grid,
   Stack,
   Box,
   CircularProgress,
 } from '@mui/material';
+
+import { Grid } from '@mui/material';
+
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { ChangeEvent } from 'react';
 import { CreateEventForm } from '../data/CreateEventData';
@@ -19,16 +21,19 @@ interface EventFormProps {
   mode: 'create' | 'edit';
   form: CreateEventForm;
   loading?: boolean;
+
   onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   onTimeChange: (time: 'startTime' | 'endTime', value: string) => void;
   onImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: (index: number) => void;
   onToggleExistingImage?: (url: string) => void;
+
   onOrganizerChange: (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     index: number,
     field: keyof Organizer,
   ) => void;
+
   onAddOrganizer: () => void;
   onRemoveOrganizer: (index: number) => void;
   onSubmit: () => void;
@@ -51,12 +56,14 @@ export default function EventForm({
   const title = mode === 'create' ? 'Criar Evento' : 'Editar Evento';
   const buttonLabel = mode === 'create' ? 'Salvar evento' : 'Atualizar evento';
 
+  // ✅ helper para inputs do tipo time
   const handleTimeInput =
     (time: 'startTime' | 'endTime') =>
     (e: ChangeEvent<HTMLInputElement>) => {
       onTimeChange(time, e.target.value);
     };
 
+  // ✅ evita undefined no modo create
   const existingImages: EventImage[] = form.existingImages || [];
   const imagesToDelete: string[] = form.imagesToDelete || [];
 
@@ -67,9 +74,10 @@ export default function EventForm({
       </Typography>
 
       <Paper sx={{ p: 3, opacity: loading ? 0.6 : 1 }}>
+        {/* ✅ Grid2: usa container normalmente */}
         <Grid container spacing={2}>
-          {/* Coluna esquerda */}
-          <Grid item xs={12} md={8}>
+          {/* ✅ Grid2: NÃO usa item */}
+          <Grid gridColumn={{xs:'span 12',  md:'span 8'}}>
             <TextField
               fullWidth
               label="Nome do Evento"
@@ -91,8 +99,9 @@ export default function EventForm({
               rows={4}
             />
 
+            {/* ✅ sub-grid */}
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
+              <Grid gridColumn={{xs: 'span 12', sm:'span 4'}}>
                 <TextField
                   fullWidth
                   label="Data"
@@ -105,7 +114,7 @@ export default function EventForm({
                 />
               </Grid>
 
-              <Grid item xs={12} sm={4}>
+              <Grid gridColumn={{xs:'12', sm:'4'}}>
                 <TextField
                   fullWidth
                   label="Hora de Início"
@@ -118,7 +127,7 @@ export default function EventForm({
                 />
               </Grid>
 
-              <Grid item xs={12} sm={4}>
+              <Grid gridColumn={{xs:'12' ,sm:'4'}}>
                 <TextField
                   fullWidth
                   label="Hora de Fim"
@@ -135,14 +144,14 @@ export default function EventForm({
               fullWidth
               label="Local"
               name="location"
-              value={form.location}
+              value={(form).location ?? ''} // ⚠️ só pra não quebrar se seu form tiver address no lugar
               onChange={onChange}
               margin="normal"
               required
             />
 
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+              <Grid gridColumn={{xs:'12',sm:'6'}}>
                 <TextField
                   fullWidth
                   label="Preço (opcional)"
@@ -153,7 +162,7 @@ export default function EventForm({
                   placeholder="Ex: 33,00"
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid gridColumn={{xs:'12', sm:'6'}}>
                 <TextField
                   fullWidth
                   label="Traje (opcional)"
@@ -172,22 +181,17 @@ export default function EventForm({
                 Imagens do evento
               </Typography>
 
-              {/* 🔹 Imagens já salvas (GCP) */}
+              {/* Imagens já salvas */}
               {existingImages.length > 0 && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Imagens atuais
                   </Typography>
 
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 2,
-                    }}
-                  >
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                     {existingImages.map((img, index) => {
                       const isMarked = imagesToDelete.includes(img.url);
+
                       return (
                         <Box
                           key={img.filename || index}
@@ -206,12 +210,9 @@ export default function EventForm({
                             component="img"
                             src={img.url}
                             alt={`Imagem atual ${index + 1}`}
-                            sx={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                            }}
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
+
                           {onToggleExistingImage && (
                             <Button
                               size="small"
@@ -238,7 +239,7 @@ export default function EventForm({
                 </Box>
               )}
 
-              {/* Input para NOVAS imagens */}
+              {/* Input novas imagens */}
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
@@ -268,16 +269,9 @@ export default function EventForm({
                 )}
               </Stack>
 
-              {/* Previews das novas imagens */}
+              {/* Previews */}
               {form.imagePreviews && form.imagePreviews.length > 0 && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                  }}
-                >
+                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                   {form.imagePreviews.map((src, index) => (
                     <Box
                       key={index}
@@ -295,12 +289,9 @@ export default function EventForm({
                         component="img"
                         src={src}
                         alt={`Nova imagem ${index + 1}`}
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       />
+
                       <Button
                         size="small"
                         color="error"
@@ -325,18 +316,14 @@ export default function EventForm({
             </Box>
           </Grid>
 
-          {/* Coluna direita: organizadores */}
-          <Grid item xs={12} md={4}>
+          {/* Coluna direita */}
+          <Grid gridColumn={{xs:'12', md:'4'}}>
             <Typography variant="h6" gutterBottom>
               Organizadores
             </Typography>
 
             {form.organizers.map((organizer, index) => (
-              <Paper
-                key={index}
-                variant="outlined"
-                sx={{ p: 2, mb: 2 }}
-              >
+              <Paper key={index} variant="outlined" sx={{ p: 2, mb: 2 }}>
                 <Typography variant="subtitle2" gutterBottom>
                   Organizador {index + 1}
                 </Typography>
@@ -345,12 +332,11 @@ export default function EventForm({
                   fullWidth
                   label="Nome"
                   value={organizer.organizerName}
-                  onChange={(e) =>
-                    onOrganizerChange(e, index, 'organizerName')
-                  }
+                  onChange={(e) => onOrganizerChange(e, index, 'organizerName')}
                   margin="dense"
                   required
                 />
+
                 <TextField
                   fullWidth
                   label="Email"
@@ -358,6 +344,7 @@ export default function EventForm({
                   onChange={(e) => onOrganizerChange(e, index, 'email')}
                   margin="dense"
                 />
+
                 <TextField
                   fullWidth
                   label="WhatsApp"
@@ -365,6 +352,7 @@ export default function EventForm({
                   onChange={(e) => onOrganizerChange(e, index, 'whatsapp')}
                   margin="dense"
                 />
+
                 <TextField
                   fullWidth
                   label="Instagram"
@@ -386,11 +374,7 @@ export default function EventForm({
               </Paper>
             ))}
 
-            <Button
-              variant="text"
-              onClick={onAddOrganizer}
-              sx={{ mt: 1 }}
-            >
+            <Button variant="text" onClick={onAddOrganizer} sx={{ mt: 1 }}>
               + Adicionar organizador
             </Button>
           </Grid>

@@ -12,11 +12,11 @@ export default function EventFormSkeleton() {
 
       {/* Campo: data e hora (2 colunas, se você quiser manter grid) */}
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={6}>
+        <Grid gridColumn={{xs:'12', md:'6'}}>
           <ThemedSkeleton width="30%" height={18} />
           <ThemedSkeleton width="100%" height={40} sx={{ mt: 1 }} />
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid gridColumn={{xs:'12', md:'6'}}>
           <ThemedSkeleton width="30%" height={18} />
           <ThemedSkeleton width="100%" height={40} sx={{ mt: 1 }} />
         </Grid>

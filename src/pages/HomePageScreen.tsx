@@ -105,7 +105,7 @@ const HomePageScreen: React.FC = () => {
 
           <Grid container spacing={2}>
             {/* Linha 1: busca e cidade */}
-            <Grid item xs={12} md={4}>
+            <Grid gridColumn={{xs:'12', md:'4'}}>
               <TextField
                 fullWidth
                 label="Buscar por nome do evento ou descrição"
@@ -114,7 +114,7 @@ const HomePageScreen: React.FC = () => {
                 size="small"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid gridColumn={{xs:'12', md:'3'}}>
               <TextField
                 fullWidth
                 label="Cidade / Local"
@@ -125,7 +125,7 @@ const HomePageScreen: React.FC = () => {
             </Grid>
 
             {/* Datas */}
-            <Grid item xs={6} md={2}>
+            <Grid gridColumn={{xs:'6', md:'2'}}>
               <TextField
                 fullWidth
                 label="Data inicial"
@@ -135,7 +135,7 @@ const HomePageScreen: React.FC = () => {
                 size="small"
               />
             </Grid>
-            <Grid item xs={6} md={2}>
+            <Grid gridColumn={{xs:'6', md:'2'}}>
               <TextField
                 fullWidth
                 label="Data final"
@@ -147,7 +147,7 @@ const HomePageScreen: React.FC = () => {
             </Grid>
 
             {/* Linha 2: preço e traje */}
-            <Grid item xs={6} md={2}>
+            <Grid gridColumn={{xs:'6', md:'2'}}>
               <TextField
                 fullWidth
                 label="Preço mínimo"
@@ -156,7 +156,7 @@ const HomePageScreen: React.FC = () => {
                 size="small"
               />
             </Grid>
-            <Grid item xs={6} md={2}>
+            <Grid gridColumn={{xs:'6', md:'2'}}>
               <TextField
                 fullWidth
                 label="Preço máximo"
@@ -166,7 +166,7 @@ const HomePageScreen: React.FC = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid gridColumn={{xs:'12', md:'3'}}>
               <TextField
                 fullWidth
                 label="Traje"
@@ -178,7 +178,7 @@ const HomePageScreen: React.FC = () => {
             </Grid>
 
             {/* Ordenação */}
-            <Grid item xs={12} md={3}>
+            <Grid gridColumn={{xs:'12', md:'3'}}>
               <TextField
                 fullWidth
                 select
@@ -198,7 +198,7 @@ const HomePageScreen: React.FC = () => {
             </Grid>
 
             {/* Mostrar passados + limpar */}
-            <Grid item xs={12} md={4}>
+            <Grid gridColumn={{xs:'12', md:'4'}}>
               <Box
                 sx={{
                   display: 'flex',
